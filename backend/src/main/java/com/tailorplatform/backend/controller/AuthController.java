@@ -1,5 +1,6 @@
 package com.tailorplatform.backend.controller;
 
+import com.tailorplatform.backend.dto.LoginRequest;
 import com.tailorplatform.backend.dto.RegisterRequest;
 import com.tailorplatform.backend.entity.User;
 import com.tailorplatform.backend.service.AuthService;
@@ -16,5 +17,10 @@ public class AuthController {
     @PostMapping("/register")
     public User register(@RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }
