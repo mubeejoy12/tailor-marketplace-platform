@@ -1,6 +1,7 @@
 package com.tailorplatform.backend.service;
 
 import com.tailorplatform.backend.dto.TailorProfileRequest;
+import com.tailorplatform.backend.dto.TailorProfileResponse;
 import com.tailorplatform.backend.entity.TailorProfile;
 import com.tailorplatform.backend.entity.User;
 import com.tailorplatform.backend.repository.TailorProfileRepository;
@@ -17,7 +18,7 @@ public class TailorProfileService {
     private final TailorProfileRepository tailorProfileRepository;
     private final UserRepository userRepository;
 
-    public TailorProfile createProfile(TailorProfileRequest request) {
+    public TailorProfileResponse createProfile(TailorProfileRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -33,27 +34,37 @@ public class TailorProfileService {
                 .profileImage(request.getProfileImage())
                 .build();
 
-        return tailorProfileRepository.save(profile);
+        return TailorProfileResponse.from(tailorProfileRepository.save(profile));
     }
 
-    public TailorProfile getProfile(Long id) {
-        return tailorProfileRepository.findById(id)
+    public TailorProfileResponse getProfile(Long id) {
+        TailorProfile profile = tailorProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tailor profile not found"));
+        return TailorProfileResponse.from(profile);
     }
 
-    public List<TailorProfile> getAllProfiles() {
-        return tailorProfileRepository.findAll();
+    public List<TailorProfileResponse> getAllProfiles() {
+        return tailorProfileRepository.findAll()
+                .stream()
+                .map(TailorProfileResponse::from)
+                .toList();
     }
 
-    public List<TailorProfile> searchByLocation(String location) {
-        return tailorProfileRepository.findByLocationContainingIgnoreCase(location);
+    public List<TailorProfileResponse> searchByLocation(String location) {
+        return tailorProfileRepository.findByLocationContainingIgnoreCase(location)
+                .stream()
+                .map(TailorProfileResponse::from)
+                .toList();
     }
 
-    public List<TailorProfile> searchBySpecialization(String specialization) {
-        return tailorProfileRepository.findBySpecializationContainingIgnoreCase(specialization);
+    public List<TailorProfileResponse> searchBySpecialization(String specialization) {
+        return tailorProfileRepository.findBySpecializationContainingIgnoreCase(specialization)
+                .stream()
+                .map(TailorProfileResponse::from)
+                .toList();
     }
 
-    public TailorProfile updateProfile(Long id, TailorProfileRequest request) {
+    public TailorProfileResponse updateProfile(Long id, TailorProfileRequest request) {
         TailorProfile profile = tailorProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tailor profile not found"));
 
@@ -62,6 +73,6 @@ public class TailorProfileService {
         profile.setSpecialization(request.getSpecialization());
         profile.setProfileImage(request.getProfileImage());
 
-        return tailorProfileRepository.save(profile);
+        return TailorProfileResponse.from(tailorProfileRepository.save(profile));
     }
 }

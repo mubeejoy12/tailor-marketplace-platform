@@ -53,8 +53,14 @@ export default function TailorCard({
             </div>
           )}
           <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 shadow-sm">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span className="text-xs font-semibold text-[#111111]">{rating.toFixed(1)}</span>
+            {rating > 0 ? (
+              <>
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span className="text-xs font-semibold text-[#111111]">{rating.toFixed(1)}</span>
+              </>
+            ) : (
+              <span className="text-xs font-semibold text-[#6B7280]">New</span>
+            )}
           </div>
         </div>
 

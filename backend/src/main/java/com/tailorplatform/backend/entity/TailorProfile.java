@@ -33,6 +33,7 @@ public class TailorProfile {
 
     private String specialization;
 
+    @Builder.Default
     @Column(precision = 2, scale = 1)
     private BigDecimal rating = BigDecimal.ZERO;
 
