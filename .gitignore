@@ -14,4 +14,4 @@ target/
 
 # IDE
 .idea/
-.vscode/
+.vscode/.DS_Store
