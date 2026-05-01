@@ -12,6 +12,15 @@ target/
 # Mac
 .DS_Store
 
-# IDE
+# IDE & editor
 .idea/
-.vscode/.DS_Store
+.vscode/
+*.iml
+
+# Claude Code workspace files
+.claude/
+
+# Environment — never commit secrets
+.env.local
+.env.*.local
+backend/src/main/resources/application-local.properties
