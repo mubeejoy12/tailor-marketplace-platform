@@ -1,4 +1,5 @@
 export interface AuthUser {
+  id: number;
   email: string;
 }
 
@@ -7,6 +8,7 @@ const USER_KEY = "tailor_user";
 
 interface JwtPayload {
   sub: string;
+  userId: number;
   iat: number;
   exp: number;
 }
@@ -32,7 +34,7 @@ function deleteCookie(name: string) {
 /** Persist token + derived user after login */
 export function setAuth(token: string): void {
   const payload = decodeJwt(token);
-  const user: AuthUser = { email: payload?.sub ?? "" };
+  const user: AuthUser = { id: payload?.userId ?? 0, email: payload?.sub ?? "" };
   const maxAge = payload?.exp
     ? payload.exp - Math.floor(Date.now() / 1000)
     : 86400;
