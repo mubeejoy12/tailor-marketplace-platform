@@ -1,22 +1,26 @@
 export interface AuthUser {
   id: number;
   email: string;
+  fullName: string;
+  role: "CUSTOMER" | "TAILOR" | "ADMIN" | string;
 }
 
 const TOKEN_KEY = "tailor_token";
-const USER_KEY = "tailor_user";
+const USER_KEY  = "tailor_user";
 
 interface JwtPayload {
-  sub: string;
-  userId: number;
-  iat: number;
-  exp: number;
+  sub:      string;
+  userId:   number;
+  role:     string;
+  fullName: string;
+  iat:      number;
+  exp:      number;
 }
 
 function decodeJwt(token: string): JwtPayload | null {
   try {
     const base64 = token.split(".")[1];
-    const json = atob(base64.replace(/-/g, "+").replace(/_/g, "/"));
+    const json   = atob(base64.replace(/-/g, "+").replace(/_/g, "/"));
     return JSON.parse(json) as JwtPayload;
   } catch {
     return null;
@@ -33,14 +37,19 @@ function deleteCookie(name: string) {
 
 /** Persist token + derived user after login */
 export function setAuth(token: string): void {
-  const payload = decodeJwt(token);
-  const user: AuthUser = { id: payload?.userId ?? 0, email: payload?.sub ?? "" };
+  const payload  = decodeJwt(token);
+  const user: AuthUser = {
+    id:       payload?.userId   ?? 0,
+    email:    payload?.sub      ?? "",
+    fullName: payload?.fullName ?? "",
+    role:     payload?.role     ?? "CUSTOMER",
+  };
   const maxAge = payload?.exp
     ? payload.exp - Math.floor(Date.now() / 1000)
     : 86400;
 
   localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  localStorage.setItem(USER_KEY,  JSON.stringify(user));
   setCookie(TOKEN_KEY, token, maxAge);
 }
 
