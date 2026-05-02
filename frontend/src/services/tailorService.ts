@@ -35,3 +35,8 @@ export function fetchTailors(): Promise<TailorProfile[]> {
 export function fetchTailorById(id: number | string): Promise<TailorProfile> {
   return get<TailorProfile>(`/api/tailors/${id}`);
 }
+
+/** Fetch a tailor's profile by their user account ID (used in dashboard) */
+export function fetchTailorByUserId(userId: number | string): Promise<TailorProfile> {
+  return get<TailorProfile>(`/api/tailors/user/${userId}`);
+}

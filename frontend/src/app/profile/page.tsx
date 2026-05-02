@@ -38,9 +38,17 @@ function OrderCard({ order }: { order: OrderResponse }) {
         <div>
           <p className="text-xs text-[#9CA3AF] mb-0.5">Order #{order.id}</p>
           <p className="text-sm font-semibold text-[#111111]">{order.styleChoice}</p>
+          {order.tailorShopName && (
+            <p className="text-xs text-[#0F766E] font-medium mt-0.5">{order.tailorShopName}</p>
+          )}
           <p className="text-xs text-[#6B7280] mt-0.5">Fabric: {order.fabricChoice}</p>
         </div>
-        <StatusBadge status={order.orderStatus} />
+        <div className="flex flex-col items-end gap-2">
+          <StatusBadge status={order.orderStatus} />
+          <Link href={`/orders/${order.id}`} className="text-xs text-[#0F766E] hover:underline flex items-center gap-0.5">
+            Track <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-xs text-[#6B7280] mb-4">

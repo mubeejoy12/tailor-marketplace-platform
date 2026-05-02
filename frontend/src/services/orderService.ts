@@ -18,11 +18,17 @@ export interface OrderResponse {
   styleChoice: string;
   fabricChoice: string;
   amount: number | null;
+  paymentReference: string | null;
   paymentStatus: string;
   orderStatus: string;
   deliveryDate: string | null;
   createdAt: string;
   updatedAt: string;
+  // Enriched tailor info (populated on detail/tracking views)
+  tailorShopName: string | null;
+  tailorLocation: string | null;
+  tailorSpecialization: string | null;
+  tailorRating: number | null;
 }
 
 async function parseResponse<T>(res: Response): Promise<T> {
