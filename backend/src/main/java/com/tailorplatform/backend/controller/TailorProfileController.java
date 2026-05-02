@@ -30,6 +30,12 @@ public class TailorProfileController {
         return tailorProfileService.getProfile(id);
     }
 
+    /** GET /api/tailors/user/{userId} — fetch a tailor's profile by their user account ID */
+    @GetMapping("/user/{userId}")
+    public TailorProfileResponse getProfileByUser(@PathVariable Long userId) {
+        return tailorProfileService.getProfileByUserId(userId);
+    }
+
     @GetMapping("/search/location")
     public List<TailorProfileResponse> searchByLocation(@RequestParam String location) {
         return tailorProfileService.searchByLocation(location);

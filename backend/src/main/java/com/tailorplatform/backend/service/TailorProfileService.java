@@ -64,6 +64,12 @@ public class TailorProfileService {
                 .toList();
     }
 
+    public TailorProfileResponse getProfileByUserId(Long userId) {
+        TailorProfile profile = tailorProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("No tailor profile found for user: " + userId));
+        return TailorProfileResponse.from(profile);
+    }
+
     public TailorProfileResponse updateProfile(Long id, TailorProfileRequest request) {
         TailorProfile profile = tailorProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tailor profile not found"));
