@@ -64,6 +64,7 @@ public class PaymentService {
         private String reference;
         private long amount;          // in kobo
         @JsonProperty("gateway_response") private String gatewayResponse;
+        private Map<String, Object> metadata; // contains our orderId
     }
 
     @Data
@@ -104,11 +105,17 @@ public class PaymentService {
         // Paystack requires amount in kobo (Naira × 100)
         long amountInKobo = Math.round(req.getAmount() * 100);
 
+        // Embed orderId in Paystack metadata — survives even if callback URL params are lost
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("orderId",      req.getOrderId());
+        metadata.put("cancel_action", callbackUrl + "?orderId=" + req.getOrderId() + "&status=cancelled");
+
         Map<String, Object> body = new HashMap<>();
         body.put("email",        req.getEmail());
         body.put("amount",       amountInKobo);
         body.put("reference",    reference);
         body.put("callback_url", callbackUrl + "?orderId=" + req.getOrderId());
+        body.put("metadata",     metadata);
 
         log.debug("Paystack init request body: email={} amount={} kobo reference={} callback={}",
                 req.getEmail(), amountInKobo, reference, callbackUrl + "?orderId=" + req.getOrderId());
@@ -193,9 +200,17 @@ public class PaymentService {
         log.info("Paystack verify result — reference={} paystackStatus={} paid={}",
                 reference, data.getStatus(), paid);
 
-        // Locate order — by reference first (most reliable), fallback to orderId param
+        // Locate order — priority: reference on order → orderId param → Paystack metadata
+        Long metadataOrderId = null;
+        if (data.getMetadata() != null) {
+            Object raw = data.getMetadata().get("orderId");
+            if (raw instanceof Number n) metadataOrderId = n.longValue();
+        }
+        final Long resolvedFromMetadata = metadataOrderId;
+
         Order order = orderRepository.findByPaymentReference(reference)
                 .or(() -> Optional.ofNullable(orderId).flatMap(orderRepository::findById))
+                .or(() -> Optional.ofNullable(resolvedFromMetadata).flatMap(orderRepository::findById))
                 .orElse(null);
 
         // Idempotent status update
