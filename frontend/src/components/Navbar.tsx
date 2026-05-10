@@ -163,7 +163,7 @@ function UserDropdown() {
             />
           )}
           <DropdownItem
-            href="/profile"
+            href="/orders"
             icon={ShoppingBag}
             label="My Orders"
             sublabel="Track your custom outfits"
@@ -264,7 +264,7 @@ function MobileMenu({
               </Link>
             )}
             <Link
-              href="/profile"
+              href="/orders"
               onClick={onClose}
               className="flex items-center gap-3 py-2.5 px-3 rounded-xl text-sm font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors"
             >
