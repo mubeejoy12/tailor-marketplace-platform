@@ -1,6 +1,7 @@
 package com.tailorplatform.backend.service;
 
 import com.tailorplatform.backend.dto.MeasurementRequest;
+import com.tailorplatform.backend.dto.MeasurementResponse;
 import com.tailorplatform.backend.entity.Measurement;
 import com.tailorplatform.backend.entity.User;
 import com.tailorplatform.backend.repository.MeasurementRepository;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,9 +19,9 @@ public class MeasurementService {
     private final MeasurementRepository measurementRepository;
     private final UserRepository userRepository;
 
-    public Measurement saveMeasurement(MeasurementRequest request) {
+    public MeasurementResponse saveMeasurement(MeasurementRequest request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + request.getUserId()));
 
         Measurement measurement = Measurement.builder()
                 .user(user)
@@ -27,37 +29,49 @@ public class MeasurementService {
                 .waist(request.getWaist())
                 .sleeve(request.getSleeve())
                 .neck(request.getNeck())
+                .shoulder(request.getShoulder())
+                .hip(request.getHip())
                 .trouserLength(request.getTrouserLength())
+                .inseam(request.getInseam())
                 .bodyReferenceImage(request.getBodyReferenceImage())
                 .build();
 
-        return measurementRepository.save(measurement);
+        return MeasurementResponse.from(measurementRepository.save(measurement));
     }
 
-    public List<Measurement> getMeasurementsByUser(Long userId) {
-        return measurementRepository.findByUserId(userId);
+    public List<MeasurementResponse> getMeasurementsByUser(Long userId) {
+        return measurementRepository.findByUserId(userId).stream()
+                .map(MeasurementResponse::from)
+                .collect(Collectors.toList());
     }
 
-    public Measurement getMeasurement(Long id) {
-        return measurementRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Measurement not found"));
+    public MeasurementResponse getMeasurement(Long id) {
+        Measurement m = measurementRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Measurement not found: " + id));
+        return MeasurementResponse.from(m);
     }
 
-    public Measurement updateMeasurement(Long id, MeasurementRequest request) {
-        Measurement measurement = measurementRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Measurement not found"));
+    public MeasurementResponse updateMeasurement(Long id, MeasurementRequest request) {
+        Measurement m = measurementRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Measurement not found: " + id));
 
-        measurement.setChest(request.getChest());
-        measurement.setWaist(request.getWaist());
-        measurement.setSleeve(request.getSleeve());
-        measurement.setNeck(request.getNeck());
-        measurement.setTrouserLength(request.getTrouserLength());
-        measurement.setBodyReferenceImage(request.getBodyReferenceImage());
+        m.setChest(request.getChest());
+        m.setWaist(request.getWaist());
+        m.setSleeve(request.getSleeve());
+        m.setNeck(request.getNeck());
+        m.setShoulder(request.getShoulder());
+        m.setHip(request.getHip());
+        m.setTrouserLength(request.getTrouserLength());
+        m.setInseam(request.getInseam());
+        m.setBodyReferenceImage(request.getBodyReferenceImage());
 
-        return measurementRepository.save(measurement);
+        return MeasurementResponse.from(measurementRepository.save(m));
     }
 
     public void deleteMeasurement(Long id) {
+        if (!measurementRepository.existsById(id)) {
+            throw new IllegalArgumentException("Measurement not found: " + id);
+        }
         measurementRepository.deleteById(id);
     }
 }

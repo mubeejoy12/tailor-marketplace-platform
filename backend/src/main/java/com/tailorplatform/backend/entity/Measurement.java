@@ -38,7 +38,16 @@ public class Measurement {
     private BigDecimal neck;
 
     @Column(precision = 5, scale = 2)
+    private BigDecimal shoulder;
+
+    @Column(precision = 5, scale = 2)
+    private BigDecimal hip;
+
+    @Column(precision = 5, scale = 2)
     private BigDecimal trouserLength;
+
+    @Column(precision = 5, scale = 2)
+    private BigDecimal inseam;
 
     private String bodyReferenceImage;
 
