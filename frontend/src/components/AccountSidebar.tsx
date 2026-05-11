@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, ShoppingBag, Ruler, LayoutDashboard } from "lucide-react";
+import { User, ShoppingBag, Ruler, LayoutDashboard, MessageSquare, ShieldCheck, Shield } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-const NAV_ITEMS = [
-  { href: "/profile",      label: "Profile",       icon: User        },
-  { href: "/orders",       label: "My Orders",     icon: ShoppingBag },
-  { href: "/measurements", label: "Measurements",  icon: Ruler       },
+const BASE_NAV = [
+  { href: "/profile",      label: "Profile",       icon: User,        roles: ["CUSTOMER", "TAILOR", "ADMIN"] },
+  { href: "/orders",       label: "My Orders",     icon: ShoppingBag, roles: ["CUSTOMER", "TAILOR", "ADMIN"] },
+  { href: "/measurements", label: "Measurements",  icon: Ruler,       roles: ["CUSTOMER", "TAILOR", "ADMIN"] },
+  { href: "/messages",     label: "Messages",      icon: MessageSquare, roles: ["CUSTOMER", "TAILOR", "ADMIN"] },
+  { href: "/dashboard",    label: "Dashboard",     icon: LayoutDashboard, roles: ["TAILOR", "ADMIN"] },
+  { href: "/verification", label: "Verification",  icon: ShieldCheck, roles: ["TAILOR"] },
+  { href: "/admin",        label: "Admin Panel",   icon: Shield,      roles: ["ADMIN"] },
 ];
 
 function initials(fullName: string, email: string): string {
@@ -17,17 +21,15 @@ function initials(fullName: string, email: string): string {
 }
 
 export default function AccountSidebar() {
-  const { user }   = useAuth();
-  const pathname   = usePathname();
-  const isTailor   = user?.role === "TAILOR" || user?.role === "ADMIN";
+  const { user } = useAuth();
+  const pathname  = usePathname();
+  const role      = user?.role ?? "CUSTOMER";
 
-  const items = isTailor
-    ? [...NAV_ITEMS, { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }]
-    : NAV_ITEMS;
+  const items = BASE_NAV.filter((item) => item.roles.includes(role));
 
   return (
     <aside className="w-full lg:w-56 flex-shrink-0">
-      {/* User identity card */}
+      {/* Identity card */}
       <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 mb-4 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-[#0F766E] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
           {user ? initials(user.fullName, user.email) : "?"}

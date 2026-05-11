@@ -40,12 +40,12 @@ function blankForm(): Record<string, string> {
 }
 
 function formToRequest(userId: number, form: Record<string, string>): MeasurementRequest {
-  const req: MeasurementRequest = { userId };
+  const req: Record<string, unknown> = { userId };
   for (const f of FIELDS) {
     const v = parseFloat(form[f.key]);
-    if (!isNaN(v) && v > 0) (req as Record<string, unknown>)[f.key] = v;
+    if (!isNaN(v) && v > 0) req[f.key] = v;
   }
-  return req;
+  return req as unknown as MeasurementRequest;
 }
 
 // ─── Measurement card ──────────────────────────────────────────────────────────
