@@ -19,8 +19,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final OrderRepository orderRepository;
+    private final OrderRepository         orderRepository;
     private final TailorProfileRepository tailorProfileRepository;
+    private final NotificationService     notificationService;
 
     // ─── Allowed status transitions (strict business flow) ───────────────────
     private static final Map<String, String> NEXT_STATUS = Map.of(
@@ -33,7 +34,6 @@ public class OrderService {
     // ─── Place order ─────────────────────────────────────────────────────────
 
     public OrderResponse placeOrder(OrderRequest req) {
-        // Validated by @Valid in controller; these are extra safety guards
         if (req.getTailorId() == null) {
             throw new IllegalArgumentException("tailorId is required");
         }
@@ -41,10 +41,8 @@ public class OrderService {
             throw new IllegalArgumentException("measurementId is required — save measurements first");
         }
 
-        // Confirm the tailor profile exists in the database
         TailorProfile tailor = tailorProfileRepository.findById(req.getTailorId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Tailor not found: " + req.getTailorId()));
+                .orElseThrow(() -> new IllegalArgumentException("Tailor not found: " + req.getTailorId()));
 
         Order order = Order.builder()
                 .userId(req.getUserId())
@@ -60,6 +58,15 @@ public class OrderService {
 
         Order saved = orderRepository.save(order);
         log.info("Order created — id={} userId={} tailorId={}", saved.getId(), saved.getUserId(), saved.getTailorId());
+
+        // Notify the tailor about the new order
+        Long tailorUserId = tailor.getUser() != null ? tailor.getUser().getId() : null;
+        notificationService.send(tailorUserId,
+                "New order #" + saved.getId() + " placed for " + saved.getStyleChoice() + ".");
+        // Notify the customer about order confirmation
+        notificationService.send(saved.getUserId(),
+                "Your order #" + saved.getId() + " has been placed successfully. Awaiting tailor acceptance.");
+
         return OrderResponse.from(saved, tailor);
     }
 
@@ -83,7 +90,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    // ─── Update order status (state machine) ─────────────────────────────────
+    // ─── Update order status (state machine + notifications) ─────────────────
 
     public OrderResponse updateOrderStatus(Long orderId, String requestedStatus) {
         Order order = orderRepository.findById(orderId)
@@ -93,8 +100,7 @@ public class OrderService {
         String allowedNext   = NEXT_STATUS.get(currentStatus);
 
         if (allowedNext == null) {
-            throw new IllegalStateException(
-                    "Order is already in a terminal state: " + currentStatus);
+            throw new IllegalStateException("Order is already in a terminal state: " + currentStatus);
         }
         if (!allowedNext.equalsIgnoreCase(requestedStatus)) {
             throw new IllegalStateException(
@@ -105,12 +111,25 @@ public class OrderService {
         order.setOrderStatus(requestedStatus.toUpperCase());
         Order saved = orderRepository.save(order);
         log.info("Order {} status: {} → {}", orderId, currentStatus, requestedStatus);
+
+        // Fire status-specific notification to the customer
+        String upper = requestedStatus.toUpperCase();
+        switch (upper) {
+            case "ACCEPTED"    -> notificationService.send(saved.getUserId(),
+                    "Good news! Your order #" + orderId + " has been accepted by your tailor.");
+            case "IN_PROGRESS" -> notificationService.send(saved.getUserId(),
+                    "Your order #" + orderId + " is now being worked on.");
+            case "READY"       -> notificationService.send(saved.getUserId(),
+                    "Your order #" + orderId + " is ready for pickup/delivery!");
+            case "DELIVERED"   -> notificationService.send(saved.getUserId(),
+                    "Your order #" + orderId + " has been delivered. Please leave a review!");
+        }
+
         return OrderResponse.from(saved, resolveTailor(saved.getTailorId()));
     }
 
     // ─── Helper ──────────────────────────────────────────────────────────────
 
-    /** Null-safe tailor lookup — returns null if not found (UI shows "Unknown tailor") */
     private TailorProfile resolveTailor(Long tailorId) {
         if (tailorId == null) return null;
         return tailorProfileRepository.findById(tailorId).orElse(null);

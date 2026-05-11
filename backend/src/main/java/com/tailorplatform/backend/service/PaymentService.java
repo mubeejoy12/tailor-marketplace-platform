@@ -30,8 +30,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private final OrderRepository orderRepository;
-    private final RestTemplate restTemplate;
+    private final OrderRepository     orderRepository;
+    private final RestTemplate        restTemplate;
+    private final NotificationService notificationService;
 
     @Value("${paystack.secret-key}")
     private String paystackSecretKey;
@@ -213,12 +214,14 @@ public class PaymentService {
                 .or(() -> Optional.ofNullable(resolvedFromMetadata).flatMap(orderRepository::findById))
                 .orElse(null);
 
-        // Idempotent status update
+        // Idempotent status update + notification
         if (paid && order != null && !"PAID".equals(order.getPaymentStatus())) {
             order.setPaymentStatus("PAID");
             order.setOrderStatus("IN_PROGRESS");
             orderRepository.save(order);
             log.info("Order {} updated → paymentStatus=PAID orderStatus=IN_PROGRESS", order.getId());
+            notificationService.send(order.getUserId(),
+                    "Payment for order #" + order.getId() + " was successful. Your tailor has started working on it!");
         }
 
         return PaymentVerifyResponse.builder()
@@ -274,6 +277,8 @@ public class PaymentService {
                 order.setOrderStatus("IN_PROGRESS");
                 orderRepository.save(order);
                 log.info("Webhook updated order {} → PAID / IN_PROGRESS", order.getId());
+                notificationService.send(order.getUserId(),
+                        "Payment confirmed for order #" + order.getId() + ". Your tailor is now working on it!");
             }
         });
     }
