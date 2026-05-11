@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, ShoppingBag, Ruler, LayoutDashboard, MessageSquare, ShieldCheck, Shield } from "lucide-react";
+import { User, ShoppingBag, Ruler, LayoutDashboard, MessageSquare, ShieldCheck, Shield, BarChart2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const BASE_NAV = [
@@ -11,6 +11,7 @@ const BASE_NAV = [
   { href: "/measurements", label: "Measurements",  icon: Ruler,       roles: ["CUSTOMER", "TAILOR", "ADMIN"] },
   { href: "/messages",     label: "Messages",      icon: MessageSquare, roles: ["CUSTOMER", "TAILOR", "ADMIN"] },
   { href: "/dashboard",    label: "Dashboard",     icon: LayoutDashboard, roles: ["TAILOR", "ADMIN"] },
+  { href: "/analytics",   label: "Analytics",     icon: BarChart2,   roles: ["TAILOR"] },
   { href: "/verification", label: "Verification",  icon: ShieldCheck, roles: ["TAILOR"] },
   { href: "/admin",        label: "Admin Panel",   icon: Shield,      roles: ["ADMIN"] },
 ];

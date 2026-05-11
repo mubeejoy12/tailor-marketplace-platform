@@ -1,5 +1,6 @@
 package com.tailorplatform.backend.service;
 
+import com.tailorplatform.backend.dto.PagedResponse;
 import com.tailorplatform.backend.dto.TailorProfileRequest;
 import com.tailorplatform.backend.dto.TailorProfileResponse;
 import com.tailorplatform.backend.dto.TailorVerificationRequest;
@@ -7,9 +8,16 @@ import com.tailorplatform.backend.entity.TailorProfile;
 import com.tailorplatform.backend.entity.User;
 import com.tailorplatform.backend.repository.TailorProfileRepository;
 import com.tailorplatform.backend.repository.UserRepository;
+import com.tailorplatform.backend.specification.TailorSearchSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -139,5 +147,52 @@ public class TailorProfileService {
                 .stream()
                 .map(TailorProfileResponse::from)
                 .toList();
+    }
+
+    // ─── Advanced Search ──────────────────────────────────────────────────────
+
+    /**
+     * Paginated, filterable tailor search using JPA Specification.
+     *
+     * @param keyword        free-text across shopName / specialization / location
+     * @param location       filter by location substring
+     * @param specialization filter by specialization substring
+     * @param minRating      minimum rating (e.g. 3.0)
+     * @param verifiedOnly   if true, only return APPROVED tailors
+     * @param page           0-based page number
+     * @param size           page size (max 50)
+     * @param sortBy         field to sort by ("rating", "shopName") — default "rating"
+     */
+    public PagedResponse<TailorProfileResponse> searchTailors(
+            String keyword,
+            String location,
+            String specialization,
+            BigDecimal minRating,
+            boolean verifiedOnly,
+            int page,
+            int size,
+            String sortBy) {
+
+        // Cap page size to prevent abuse
+        int safeSize = Math.min(size, 50);
+        String safeSort = (sortBy != null && List.of("rating", "shopName", "location").contains(sortBy))
+                ? sortBy : "rating";
+
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by(Sort.Direction.DESC, safeSort));
+
+        Specification<TailorProfile> spec = TailorSearchSpecification.build(
+                keyword, location, specialization, minRating, verifiedOnly);
+
+        Page<TailorProfile> result = tailorProfileRepository.findAll(spec, pageable);
+
+        return PagedResponse.<TailorProfileResponse>builder()
+                .content(result.getContent().stream().map(TailorProfileResponse::from).toList())
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .first(result.isFirst())
+                .last(result.isLast())
+                .build();
     }
 }

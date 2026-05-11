@@ -4,6 +4,7 @@ import TailorCard from "@/components/ui/TailorCard";
 import FilterChip from "@/components/ui/FilterChip";
 import Button from "@/components/ui/Button";
 import ReviewCard from "@/components/ui/ReviewCard";
+import RecommendedTailors from "@/components/RecommendedTailors";
 import { Search, ArrowRight, CheckCircle, Sparkles, Shield, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -134,6 +135,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Recommended Tailors — personalised, client-rendered */}
+      <RecommendedTailors />
 
       {/* How it works */}
       <section className="py-20 bg-[#FAFAF8]">

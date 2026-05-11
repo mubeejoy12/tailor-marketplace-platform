@@ -12,6 +12,7 @@ import {
   getAdminMetrics, getPendingVerifications, reviewVerification,
   getAllOrders, getAllUsers, AdminMetrics, AdminOrder,
 } from "@/services/adminService";
+import { getAdminAnalytics, AdminAnalytics } from "@/services/analyticsService";
 
 interface PendingVerification {
   id: number;
@@ -82,6 +83,37 @@ function Badge({ status }: { status: string }) {
   );
 }
 
+// ─── Simple bar chart (CSS) ───────────────────────────────────────────────────
+
+function AdminBarChart({
+  data,
+  color = "bg-teal-500",
+  format = (v: number) => String(v),
+}: {
+  data: Record<string, number>;
+  color?: string;
+  format?: (v: number) => string;
+}) {
+  const entries = Object.entries(data);
+  const max = Math.max(...entries.map(([, v]) => v), 1);
+  return (
+    <div className="flex items-end gap-1 h-28 mt-2">
+      {entries.map(([label, value]) => (
+        <div key={label} className="flex-1 flex flex-col items-center gap-0.5">
+          <div
+            title={`${label}: ${format(value)}`}
+            className={`w-full rounded-t-sm ${color} cursor-default`}
+            style={{ height: `${Math.max((value / max) * 100, 2)}px` }}
+          />
+          <span className="text-[8px] text-gray-400 truncate w-full text-center">
+            {label.slice(5)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Collapsible section ──────────────────────────────────────────────────────
 
 function Section({
@@ -117,6 +149,7 @@ function Section({
 
 export default function AdminPage() {
   const [metrics,      setMetrics]      = useState<AdminMetrics | null>(null);
+  const [analytics,    setAnalytics]    = useState<AdminAnalytics | null>(null);
   const [verifications,setVerifications]= useState<PendingVerification[]>([]);
   const [orders,       setOrders]       = useState<AdminOrder[]>([]);
   const [users,        setUsers]        = useState<AdminUser[]>([]);
@@ -138,12 +171,14 @@ export default function AdminPage() {
       getPendingVerifications(),
       getAllOrders(),
       getAllUsers(),
+      getAdminAnalytics().catch(() => null),
     ])
-      .then(([m, v, o, u]) => {
+      .then(([m, v, o, u, a]) => {
         setMetrics(m);
         setVerifications(v as PendingVerification[]);
         setOrders(o.slice(0, 50));
         setUsers(u as AdminUser[]);
+        if (a) setAnalytics(a as AdminAnalytics);
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load admin data."))
       .finally(() => setLoading(false));
@@ -221,6 +256,73 @@ export default function AdminPage() {
               value={metrics.pendingVerifications}
               color={metrics.pendingVerifications > 0 ? "#DC2626" : "#059669"}
             />
+          </div>
+        )}
+
+        {/* Analytics charts */}
+        {analytics && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+              <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-1">Orders / Month</p>
+              <AdminBarChart data={analytics.ordersByMonth} color="bg-teal-500" />
+            </div>
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+              <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-1">Revenue / Month (₦)</p>
+              <AdminBarChart
+                data={Object.fromEntries(Object.entries(analytics.revenueByMonth).map(([k, v]) => [k, Number(v)]))}
+                color="bg-emerald-500"
+                format={(v) => `₦${v.toLocaleString()}`}
+              />
+            </div>
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+              <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-1">New Users / Month</p>
+              <AdminBarChart data={analytics.newUsersByMonth} color="bg-purple-400" />
+            </div>
+
+            {/* Top tailors */}
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 md:col-span-2">
+              <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-3">Top Tailors by Completed Orders</p>
+              {analytics.topTailors.length === 0
+                ? <p className="text-sm text-gray-400 text-center py-4">No data yet</p>
+                : (
+                  <ul className="space-y-3">
+                    {analytics.topTailors.map((t, i) => {
+                      const maxOrders = analytics.topTailors[0]?.completedOrders || 1;
+                      return (
+                        <li key={t.tailorId} className="flex items-center gap-3">
+                          <span className="w-5 text-xs text-gray-400 shrink-0 text-right">{i + 1}</span>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm text-gray-800">{t.shopName}</span>
+                              <span className="text-xs text-gray-400">{t.completedOrders} orders</span>
+                            </div>
+                            <div className="h-1.5 bg-gray-100 rounded-full">
+                              <div
+                                className="h-full bg-teal-500 rounded-full"
+                                style={{ width: `${(t.completedOrders / maxOrders) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )
+              }
+            </div>
+
+            {/* Order status breakdown */}
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
+              <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-3">Order Status Breakdown</p>
+              <ul className="space-y-2">
+                {Object.entries(analytics.ordersByStatus).map(([status, count]) => (
+                  <li key={status} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-700">{status.replace('_', ' ')}</span>
+                    <span className="font-semibold text-gray-900">{count}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
 

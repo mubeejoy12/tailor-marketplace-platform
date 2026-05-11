@@ -7,10 +7,16 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews", uniqueConstraints = {
-        // one review per order (enforced at DB + service layer)
-        @UniqueConstraint(columnNames = "order_id")
-})
+@Table(name = "reviews",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "order_id")
+        },
+        indexes = {
+                @Index(name = "idx_review_tailor_id",  columnList = "tailorId"),
+                @Index(name = "idx_review_user_id",    columnList = "userId"),
+                @Index(name = "idx_review_created_at", columnList = "createdAt")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor

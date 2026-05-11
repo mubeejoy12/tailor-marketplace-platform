@@ -2,6 +2,7 @@ package com.tailorplatform.backend.repository;
 
 import com.tailorplatform.backend.entity.TailorProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -9,7 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TailorProfileRepository extends JpaRepository<TailorProfile, Long> {
+public interface TailorProfileRepository extends JpaRepository<TailorProfile, Long>,
+        JpaSpecificationExecutor<TailorProfile> {
 
     Optional<TailorProfile> findByUserId(Long userId);
 

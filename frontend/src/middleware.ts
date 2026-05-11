@@ -8,6 +8,7 @@ const PROTECTED_PREFIXES = [
   "/messages",
   "/verification",
   "/admin",
+  "/analytics",
 ];
 
 export function middleware(request: NextRequest) {
@@ -37,5 +38,6 @@ export const config = {
     "/messages/:path*",
     "/verification/:path*",
     "/admin/:path*",
+    "/analytics/:path*",
   ],
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AccountSidebar from "@/components/AccountSidebar";
@@ -8,7 +9,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import {
   Ruler, Plus, Edit3, Trash2, X, Check,
-  AlertCircle, Loader2, ChevronDown, ChevronUp,
+  AlertCircle, Loader2, ChevronDown, ChevronUp, Sparkles,
 } from "lucide-react";
 import {
   getMeasurementsByUser,
@@ -353,13 +354,21 @@ export default function MeasurementsPage() {
                 </p>
               </div>
               {!loading && !error && !showForm && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => { setEditing(null); setShowForm(true); }}
-                >
-                  <Plus className="w-4 h-4" /> Add New
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/measurements/ai-assist"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-300 text-purple-700 text-sm font-medium hover:bg-purple-50 transition-colors"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> AI Assist
+                  </Link>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => { setEditing(null); setShowForm(true); }}
+                  >
+                    <Plus className="w-4 h-4" /> Add New
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -407,13 +416,21 @@ export default function MeasurementsPage() {
                 <p className="text-sm text-[#6B7280] mb-5">
                   Add your body measurements so tailors can create a perfect fit.
                 </p>
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={() => { setEditing(null); setShowForm(true); }}
-                >
-                  <Plus className="w-4 h-4" /> Add Measurements
-                </Button>
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => { setEditing(null); setShowForm(true); }}
+                  >
+                    <Plus className="w-4 h-4" /> Add Manually
+                  </Button>
+                  <Link
+                    href="/measurements/ai-assist"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-purple-300 text-purple-700 font-medium hover:bg-purple-50 transition-colors text-sm"
+                  >
+                    <Sparkles className="w-4 h-4" /> AI Assist
+                  </Link>
+                </div>
               </div>
             )}
 

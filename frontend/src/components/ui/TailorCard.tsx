@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Star, Clock, ArrowRight } from "lucide-react";
+import { MapPin, Star, Clock, ArrowRight, ShieldCheck } from "lucide-react";
 
 interface TailorCardProps {
   id: number;
@@ -11,6 +11,8 @@ interface TailorCardProps {
   priceRange?: string;
   deliveryDays?: number;
   imagePlaceholder?: string;
+  profileImage?: string;
+  verified?: boolean;
 }
 
 export default function TailorCard({
@@ -23,6 +25,8 @@ export default function TailorCard({
   priceRange = "₦15,000 – ₦80,000",
   deliveryDays = 7,
   imagePlaceholder,
+  profileImage,
+  verified = false,
 }: TailorCardProps) {
   const initials = shopName
     .split(" ")
@@ -42,14 +46,19 @@ export default function TailorCard({
           className="h-48 flex items-center justify-center relative overflow-hidden"
           style={{ backgroundColor: `${color}15` }}
         >
-          {imagePlaceholder ? (
-            <img src={imagePlaceholder} alt={shopName} className="w-full h-full object-cover" />
+          {(profileImage || imagePlaceholder) ? (
+            <img src={profileImage || imagePlaceholder} alt={shopName} className="w-full h-full object-cover" />
           ) : (
             <div
               className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg"
               style={{ backgroundColor: color, fontFamily: "Poppins, sans-serif" }}
             >
               {initials}
+            </div>
+          )}
+          {verified && (
+            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-sm" title="Verified tailor">
+              <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
             </div>
           )}
           <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 shadow-sm">

@@ -9,7 +9,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders",
+        indexes = {
+                @Index(name = "idx_order_user_id",        columnList = "userId"),
+                @Index(name = "idx_order_tailor_id",      columnList = "tailorId"),
+                @Index(name = "idx_order_status",         columnList = "orderStatus"),
+                @Index(name = "idx_order_payment_status", columnList = "paymentStatus"),
+                @Index(name = "idx_order_created_at",     columnList = "createdAt")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor

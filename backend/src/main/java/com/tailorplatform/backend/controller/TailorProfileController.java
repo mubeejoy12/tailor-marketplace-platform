@@ -1,5 +1,6 @@
 package com.tailorplatform.backend.controller;
 
+import com.tailorplatform.backend.dto.PagedResponse;
 import com.tailorplatform.backend.dto.TailorProfileRequest;
 import com.tailorplatform.backend.dto.TailorProfileResponse;
 import com.tailorplatform.backend.dto.TailorVerificationRequest;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -53,6 +55,37 @@ public class TailorProfileController {
             @PathVariable Long id,
             @RequestBody TailorProfileRequest request) {
         return tailorProfileService.updateProfile(id, request);
+    }
+
+    // ─── Advanced search ──────────────────────────────────────────────────────
+
+    /**
+     * GET /api/tailors/search
+     *
+     * Paginated, multi-filter search.  All params are optional.
+     *
+     * @param keyword        free-text across shopName/specialization/location
+     * @param location       city/region filter
+     * @param specialization garment-type filter
+     * @param minRating      minimum star rating (e.g. 3.0)
+     * @param verifiedOnly   if true, only APPROVED tailors
+     * @param page           0-based page (default 0)
+     * @param size           page size (default 12, max 50)
+     * @param sortBy         "rating" | "shopName" | "location" (default "rating")
+     */
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponse<TailorProfileResponse>> searchTailors(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String specialization,
+            @RequestParam(required = false) BigDecimal minRating,
+            @RequestParam(defaultValue = "false") boolean verifiedOnly,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "rating") String sortBy) {
+
+        return ResponseEntity.ok(tailorProfileService.searchTailors(
+                keyword, location, specialization, minRating, verifiedOnly, page, size, sortBy));
     }
 
     // ─── Verification submission (tailor action) ──────────────────────────────
