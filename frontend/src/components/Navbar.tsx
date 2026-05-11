@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import {
   Scissors, Menu, X, ChevronDown,
   LayoutDashboard, ShoppingBag, Ruler,
-  LogOut, User, ChevronRight,
+  LogOut, User, ChevronRight, MessageSquare,
 } from "lucide-react";
 import Button from "./ui/Button";
 import { useAuth } from "@/context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
@@ -177,6 +178,13 @@ function UserDropdown() {
             onClick={close}
           />
           <DropdownItem
+            href="/messages"
+            icon={MessageSquare}
+            label="Messages"
+            sublabel="Chat with tailors"
+            onClick={close}
+          />
+          <DropdownItem
             href="/profile"
             icon={User}
             label="Account"
@@ -333,7 +341,10 @@ export default function Navbar() {
           {/* Desktop right — auth-aware */}
           <div className="hidden md:flex items-center gap-3">
             {isLoggedIn ? (
-              <UserDropdown />
+              <>
+                <NotificationBell />
+                <UserDropdown />
+              </>
             ) : (
               <>
                 <Link href="/login">
@@ -344,6 +355,7 @@ export default function Navbar() {
                 </Link>
               </>
             )}
+
           </div>
 
           {/* Mobile toggle */}
