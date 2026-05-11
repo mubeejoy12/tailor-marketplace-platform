@@ -8,11 +8,16 @@ export interface TailorProfile {
   specialization: string | null;
   rating: number;
   profileImage: string | null;
+  // Verification fields (Phase 3)
+  verificationStatus: string;   // UNVERIFIED | PENDING | APPROVED | REJECTED
+  portfolioUrls: string | null;
+  shopDocumentUrl: string | null;
+  verificationNote: string | null;
 }
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    cache: "no-store", // always fresh data in dev
+    cache: "no-store",
   });
   if (!res.ok) {
     const text = await res.text();
