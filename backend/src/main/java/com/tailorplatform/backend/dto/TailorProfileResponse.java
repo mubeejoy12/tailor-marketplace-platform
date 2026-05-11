@@ -18,7 +18,13 @@ public class TailorProfileResponse {
     private BigDecimal rating;
     private String profileImage;
 
-    /** Convert entity → DTO in one place. No entity leaks past this line. */
+    // ─── Verification ──────────────────────────────────────────────────────────
+    private String verificationStatus;   // UNVERIFIED | PENDING | APPROVED | REJECTED
+    private String portfolioUrls;
+    private String shopDocumentUrl;
+    private String verificationNote;
+
+    /** Convert entity → DTO. No entity references escape this class. */
     public static TailorProfileResponse from(TailorProfile profile) {
         return TailorProfileResponse.builder()
                 .id(profile.getId())
@@ -26,8 +32,12 @@ public class TailorProfileResponse {
                 .shopName(profile.getShopName())
                 .location(profile.getLocation())
                 .specialization(profile.getSpecialization())
-                .rating(profile.getRating() != null ? profile.getRating() : java.math.BigDecimal.ZERO)
+                .rating(profile.getRating() != null ? profile.getRating() : BigDecimal.ZERO)
                 .profileImage(profile.getProfileImage())
+                .verificationStatus(profile.getVerificationStatus())
+                .portfolioUrls(profile.getPortfolioUrls())
+                .shopDocumentUrl(profile.getShopDocumentUrl())
+                .verificationNote(profile.getVerificationNote())
                 .build();
     }
 }

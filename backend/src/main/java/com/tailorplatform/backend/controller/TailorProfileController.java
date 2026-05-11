@@ -2,8 +2,10 @@ package com.tailorplatform.backend.controller;
 
 import com.tailorplatform.backend.dto.TailorProfileRequest;
 import com.tailorplatform.backend.dto.TailorProfileResponse;
+import com.tailorplatform.backend.dto.TailorVerificationRequest;
 import com.tailorplatform.backend.service.TailorProfileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,7 +49,19 @@ public class TailorProfileController {
     }
 
     @PutMapping("/{id}")
-    public TailorProfileResponse updateProfile(@PathVariable Long id, @RequestBody TailorProfileRequest request) {
+    public TailorProfileResponse updateProfile(
+            @PathVariable Long id,
+            @RequestBody TailorProfileRequest request) {
         return tailorProfileService.updateProfile(id, request);
+    }
+
+    // ─── Verification submission (tailor action) ──────────────────────────────
+
+    /** POST /api/tailors/{id}/verification — tailor submits docs for admin review */
+    @PostMapping("/{id}/verification")
+    public ResponseEntity<TailorProfileResponse> submitVerification(
+            @PathVariable Long id,
+            @RequestBody TailorVerificationRequest req) {
+        return ResponseEntity.ok(tailorProfileService.submitVerification(id, req));
     }
 }

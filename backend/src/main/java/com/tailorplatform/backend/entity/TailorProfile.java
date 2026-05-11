@@ -39,6 +39,28 @@ public class TailorProfile {
 
     private String profileImage;
 
+    // ─── Verification ──────────────────────────────────────────────────────────
+    // Lifecycle: UNVERIFIED → PENDING (tailor submits) → APPROVED | REJECTED (admin acts)
+
+    @Builder.Default
+    @Column(nullable = false)
+    private String verificationStatus = "UNVERIFIED";
+
+    /** Comma-separated portfolio image URLs submitted by the tailor */
+    @Column(columnDefinition = "TEXT")
+    private String portfolioUrls;
+
+    /** URL of the shop/trade document the tailor uploaded */
+    private String shopDocumentUrl;
+
+    /** Admin note when approving or rejecting */
+    @Column(columnDefinition = "TEXT")
+    private String verificationNote;
+
+    private LocalDateTime verificationRequestedAt;
+
+    // ─── Timestamps ────────────────────────────────────────────────────────────
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
