@@ -1,6 +1,7 @@
 package com.tailorplatform.backend.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -62,7 +63,24 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 400 — other runtime exceptions (e.g., user not found, password mismatch).
+     * 409 — duplicate key / unique constraint violation (e.g., email already registered).
+     * DataIntegrityViolationException extends RuntimeException, so this handler must
+     * appear before handleRuntime to take precedence.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateKey(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation: {}", ex.getMessage());
+        String msg = "A record with these details already exists.";
+        if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("email")) {
+            msg = "An account with this email already exists.";
+        }
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(Map.of("error", msg));
+    }
+
+    /**
+     * 400 — other runtime exceptions (e.g., invalid password).
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {

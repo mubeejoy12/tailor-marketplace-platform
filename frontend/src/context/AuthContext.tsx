@@ -19,6 +19,7 @@ import {
 interface AuthContextType {
   user: AuthUser | null;
   isLoggedIn: boolean;
+  loading: boolean;
   login: (token: string) => void;
   logout: () => void;
 }
@@ -26,6 +27,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoggedIn: false,
+  loading: true,
   login: () => {},
   logout: () => {},
 });
@@ -33,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Hydrate from storage on mount
   useEffect(() => {
@@ -40,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(getUser());
       setIsLoggedIn(true);
     }
+    setLoading(false);
   }, []);
 
   const login = useCallback((token: string) => {
@@ -55,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

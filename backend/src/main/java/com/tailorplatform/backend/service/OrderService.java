@@ -37,9 +37,6 @@ public class OrderService {
         if (req.getTailorId() == null) {
             throw new IllegalArgumentException("tailorId is required");
         }
-        if (req.getMeasurementId() == null) {
-            throw new IllegalArgumentException("measurementId is required — save measurements first");
-        }
 
         TailorProfile tailor = tailorProfileRepository.findById(req.getTailorId())
                 .orElseThrow(() -> new IllegalArgumentException("Tailor not found: " + req.getTailorId()));

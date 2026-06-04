@@ -70,20 +70,20 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const token = await loginUser({
-        email: email.trim().toLowerCase(),
+      const response = await loginUser({
+        email: email.trim(),
         password,
       });
 
-      // Persist token + update context
-      login(token);
+      login(response.token);
 
       setLoading(false);
       setSuccess(true);
 
-      // Read ?redirect= from the current URL (runs client-side only)
+      // Validate redirect to same-origin paths only (prevent open redirect)
       const params = new URLSearchParams(window.location.search);
-      const redirectTo = params.get("redirect") ?? "/";
+      const raw = params.get("redirect") ?? "/";
+      const redirectTo = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
 
       if (!redirected.current) {
         redirected.current = true;

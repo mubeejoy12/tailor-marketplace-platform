@@ -16,7 +16,6 @@ public class OrderRequest {
     @NotNull(message = "tailorId is required")
     private Long tailorId;
 
-    @NotNull(message = "measurementId is required — add measurements before placing an order")
     private Long measurementId;
 
     @NotBlank(message = "styleChoice is required")

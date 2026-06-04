@@ -20,14 +20,46 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+/** Request browser push permission — safe to call multiple times */
+function requestBrowserPermission() {
+  if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission().catch(() => {});
+  }
+}
+
+/** Fire a browser push notification if tab is not focused */
+function firePushNotification(title: string, body: string) {
+  if (
+    typeof window === "undefined" ||
+    !("Notification" in window) ||
+    Notification.permission !== "granted" ||
+    document.hasFocus()
+  ) return;
+
+  try {
+    new Notification(title, {
+      body,
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-192x192.png",
+    });
+  } catch { /* silent — some browsers block programmatic notifications */ }
+}
+
 export default function NotificationBell() {
   const [open,          setOpen]          = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading,       setLoading]       = useState(false);
   const ref                               = useRef<HTMLDivElement>(null);
+  // Track previous unread count to detect new arrivals
+  const prevUnreadRef                     = useRef<number>(0);
   const user                              = getUser();
 
   const unread = notifications.filter((n) => !n.isRead).length;
+
+  // Ask for browser notification permission once on mount
+  useEffect(() => {
+    requestBrowserPermission();
+  }, []);
 
   // Fetch on open
   useEffect(() => {
@@ -39,12 +71,21 @@ export default function NotificationBell() {
       .finally(() => setLoading(false));
   }, [open]);
 
-  // Poll unread count every 30 s (even when dropdown closed)
+  // Poll every 30 s; fire browser push if new notifications arrive
   useEffect(() => {
     if (!user) return;
     const tick = () => {
       getNotifications(user.id)
-        .then(setNotifications)
+        .then((latest) => {
+          const latestUnread = latest.filter((n) => !n.isRead).length;
+          // New notifications arrived since last poll?
+          if (latestUnread > prevUnreadRef.current) {
+            const newest = latest.find((n) => !n.isRead);
+            if (newest) firePushNotification("TailorHub", newest.message);
+          }
+          prevUnreadRef.current = latestUnread;
+          setNotifications(latest);
+        })
         .catch(() => {});
     };
     tick();

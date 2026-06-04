@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import AccountSidebar from "@/components/AccountSidebar";
 import {
   Package, Clock, CheckCircle, Truck,
-  AlertCircle, Loader2, ArrowRight,
+  AlertCircle, Loader2, ArrowRight, Star,
 } from "lucide-react";
 import { getOrdersByUser, OrderResponse } from "@/services/orderService";
 import { getUser } from "@/lib/auth";
@@ -96,6 +96,22 @@ function OrderCard({ order }: { order: OrderResponse }) {
           <div className="h-full bg-[#0F766E] rounded-full transition-all" style={{ width: `${progress}%` }} />
         </div>
       </div>
+
+      {/* Leave a review CTA — appears on delivered orders */}
+      {order.orderStatus === "DELIVERED" && (
+        <div className="mt-4 pt-4 border-t border-[#F3F4F6] flex items-center justify-between">
+          <p className="text-xs text-[#6B7280] flex items-center gap-1.5">
+            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            Rate your experience
+          </p>
+          <Link
+            href={`/orders/${order.id}`}
+            className="text-xs font-semibold text-[#0F766E] hover:underline flex items-center gap-1"
+          >
+            Leave Review <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

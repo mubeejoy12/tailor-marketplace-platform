@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { registerUser } from "@/services/authService";
 import type { Role } from "@/services/authService";
+import { useAuth } from "@/context/AuthContext";
 
 interface FormState {
   fullName: string;
@@ -38,6 +39,7 @@ interface FormErrors {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [form, setForm] = useState<FormState>({
     fullName: "",
@@ -102,17 +104,18 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await registerUser({
+      const response = await registerUser({
         fullName: form.fullName.trim(),
-        email: form.email.trim().toLowerCase(),
+        email: form.email.trim(),
         password: form.password,
         phone: form.phone.trim() || undefined,
         role: form.role,
       });
 
+      login(response.token);
       setLoading(false);
       setSuccess(true);
-      setTimeout(() => router.push("/login"), 2500);
+      setTimeout(() => router.push("/"), 1500);
     } catch (err) {
       console.error("[Register] error:", err);
       setLoading(false);
@@ -205,7 +208,7 @@ export default function RegisterPage() {
               <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-emerald-800">Account created successfully!</p>
-                <p className="text-xs text-emerald-600">Redirecting you to login in a moment…</p>
+                <p className="text-xs text-emerald-600">You&apos;re signed in — redirecting now…</p>
               </div>
             </div>
           )}
