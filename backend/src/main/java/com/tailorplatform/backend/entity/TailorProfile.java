@@ -46,6 +46,29 @@ public class TailorProfile {
     @Column(nullable = false)
     private String verificationStatus = "UNVERIFIED";
 
+    /** True once admin has approved a VerificationRequest for this tailor */
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean verified = false;
+
+    /**
+     * True when verified=true AND completedOrders >= 20 AND rating >= 4.5.
+     * Recalculated automatically after each delivered order or review.
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean premium = false;
+
+    /** Cached count of DELIVERED orders — updated by OrderService */
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer completedOrders = 0;
+
+    /** Cached total review count — updated by ReviewService */
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer totalReviews = 0;
+
     /** Comma-separated portfolio image URLs submitted by the tailor */
     @Column(columnDefinition = "TEXT")
     private String portfolioUrls;

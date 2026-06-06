@@ -12,6 +12,7 @@ import com.tailorplatform.backend.repository.TailorProfileRepository;
 import com.tailorplatform.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,8 @@ public class ReviewService {
     private final OrderRepository         orderRepository;
     private final TailorProfileRepository tailorProfileRepository;
     private final UserRepository          userRepository;
+    @Lazy
+    private final VerificationService     verificationService;
 
     // ─── Submit review ────────────────────────────────────────────────────────
 
@@ -63,7 +66,7 @@ public class ReviewService {
         Review saved = reviewRepository.save(review);
         log.info("Review submitted — orderId={} rating={}", req.getOrderId(), req.getRating());
 
-        // 5. Recalculate and persist the tailor's average rating
+        // 5. Recalculate avg rating, increment totalReviews, re-check premium
         recalculateTailorRating(req.getTailorId());
 
         String reviewerName = userRepository.findById(req.getUserId())
@@ -105,8 +108,10 @@ public class ReviewService {
 
         tailorProfileRepository.findById(tailorId).ifPresent(t -> {
             t.setRating(BigDecimal.valueOf(avg).setScale(1, RoundingMode.HALF_UP));
+            t.setTotalReviews(reviews.size());
+            verificationService.checkAndSetPremium(t);
             tailorProfileRepository.save(t);
-            log.info("Tailor {} rating updated → {}", tailorId, t.getRating());
+            log.info("Tailor {} rating → {} totalReviews → {}", tailorId, t.getRating(), t.getTotalReviews());
         });
     }
 }

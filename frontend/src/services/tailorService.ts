@@ -8,8 +8,13 @@ export interface TailorProfile {
   specialization: string | null;
   rating: number;
   profileImage: string | null;
-  // Verification fields (Phase 3)
-  verificationStatus: string;   // UNVERIFIED | PENDING | APPROVED | REJECTED
+  // Trust & Reputation fields
+  verified: boolean;              // true once admin approves identity
+  premium: boolean;               // true when verified + 20+ orders + 4.5+ rating
+  completedOrders: number;        // cached count of DELIVERED orders
+  totalReviews: number;           // cached total review count
+  // Verification workflow
+  verificationStatus: string;     // UNVERIFIED | PENDING | APPROVED | REJECTED
   portfolioUrls: string | null;
   shopDocumentUrl: string | null;
   verificationNote: string | null;
