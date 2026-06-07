@@ -91,21 +91,9 @@ public class AdminController {
         return ResponseEntity.ok(orders);
     }
 
-    // ─── Tailor verifications ─────────────────────────────────────────────────
-
-    @GetMapping("/verifications/pending")
-    public ResponseEntity<List<TailorProfileResponse>> getPendingVerifications() {
-        return ResponseEntity.ok(tailorProfileService.getPendingVerifications());
-    }
-
-    @PutMapping("/tailors/{tailorId}/verify")
-    public ResponseEntity<TailorProfileResponse> reviewVerification(
-            @PathVariable Long tailorId,
-            @RequestBody Map<String, String> body) {
-        String decision = body.getOrDefault("decision", "");
-        String note     = body.getOrDefault("note", "");
-        return ResponseEntity.ok(tailorProfileService.reviewVerification(tailorId, decision, note));
-    }
+    // ─── Tailor verifications — delegated to VerificationController ──────────
+    // (GET /api/admin/verifications, PUT /api/admin/verifications/{id}/approve|reject
+    //  are handled by VerificationController to avoid duplicate mapping)
 
     // ─── Tailors ──────────────────────────────────────────────────────────────
 
