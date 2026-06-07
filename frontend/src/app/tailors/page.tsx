@@ -22,6 +22,10 @@ interface TailorPage {
     rating: number;
     profileImage: string | null;
     verificationStatus: string;
+    verified: boolean;
+    premium: boolean;
+    completedOrders: number;
+    totalReviews: number;
   }>;
   page: number;
   size: number;
