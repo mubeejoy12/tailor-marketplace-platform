@@ -9,6 +9,7 @@ import com.tailorplatform.backend.repository.TailorProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class OrderService {
     private final OrderRepository         orderRepository;
     private final TailorProfileRepository tailorProfileRepository;
     private final NotificationService     notificationService;
+    private final VerificationService     verificationService;
 
     // ─── Allowed status transitions (strict business flow) ───────────────────
     private static final Map<String, String> NEXT_STATUS = Map.of(
@@ -36,9 +38,6 @@ public class OrderService {
     public OrderResponse placeOrder(OrderRequest req) {
         if (req.getTailorId() == null) {
             throw new IllegalArgumentException("tailorId is required");
-        }
-        if (req.getMeasurementId() == null) {
-            throw new IllegalArgumentException("measurementId is required — save measurements first");
         }
 
         TailorProfile tailor = tailorProfileRepository.findById(req.getTailorId())
@@ -92,6 +91,7 @@ public class OrderService {
 
     // ─── Update order status (state machine + notifications) ─────────────────
 
+    @Transactional
     public OrderResponse updateOrderStatus(Long orderId, String requestedStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
@@ -121,8 +121,17 @@ public class OrderService {
                     "Your order #" + orderId + " is now being worked on.");
             case "READY"       -> notificationService.send(saved.getUserId(),
                     "Your order #" + orderId + " is ready for pickup/delivery!");
-            case "DELIVERED"   -> notificationService.send(saved.getUserId(),
-                    "Your order #" + orderId + " has been delivered. Please leave a review!");
+            case "DELIVERED"   -> {
+                notificationService.send(saved.getUserId(),
+                        "Your order #" + orderId + " has been delivered. Please leave a review!");
+                // Increment tailor's completed orders count and re-check premium eligibility
+                tailorProfileRepository.findById(saved.getTailorId()).ifPresent(t -> {
+                    t.setCompletedOrders((t.getCompletedOrders() != null ? t.getCompletedOrders() : 0) + 1);
+                    verificationService.checkAndSetPremium(t);
+                    tailorProfileRepository.save(t);
+                    log.info("Tailor {} completedOrders → {}", t.getId(), t.getCompletedOrders());
+                });
+            }
         }
 
         return OrderResponse.from(saved, resolveTailor(saved.getTailorId()));

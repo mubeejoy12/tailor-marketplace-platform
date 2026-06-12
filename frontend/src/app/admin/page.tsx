@@ -117,9 +117,9 @@ function AdminBarChart({
 // ─── Collapsible section ──────────────────────────────────────────────────────
 
 function Section({
-  title, count, children,
+  title, count, children, action,
 }: {
-  title: string; count?: number; children: React.ReactNode;
+  title: string; count?: number; children: React.ReactNode; action?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(true);
   return (
@@ -138,7 +138,10 @@ function Section({
             </span>
           )}
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-[#9CA3AF]" /> : <ChevronDown className="w-4 h-4 text-[#9CA3AF]" />}
+        <div className="flex items-center gap-3">
+          {action && <span onClick={(e) => e.stopPropagation()}>{action}</span>}
+          {open ? <ChevronUp className="w-4 h-4 text-[#9CA3AF]" /> : <ChevronDown className="w-4 h-4 text-[#9CA3AF]" />}
+        </div>
       </button>
       {open && <div>{children}</div>}
     </div>
@@ -327,7 +330,11 @@ export default function AdminPage() {
         )}
 
         {/* Pending verifications */}
-        <Section title="Pending Verifications" count={(verifications as unknown[]).length}>
+        <Section
+          title="Pending Verifications"
+          count={(verifications as unknown[]).length}
+          action={<a href="/admin/verifications" className="text-xs font-medium text-[#0F766E] hover:underline">View all →</a>}
+        >
           {(verifications as unknown[]).length === 0 ? (
             <div className="py-10 text-center">
               <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />

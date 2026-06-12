@@ -22,6 +22,10 @@ interface TailorPage {
     rating: number;
     profileImage: string | null;
     verificationStatus: string;
+    verified: boolean;
+    premium: boolean;
+    completedOrders: number;
+    totalReviews: number;
   }>;
   page: number;
   size: number;
@@ -327,8 +331,11 @@ export default function TailorsPage() {
                   specialization={t.specialization ?? "General Tailoring"}
                   location={t.location}
                   rating={Number(t.rating)}
+                  reviewCount={t.totalReviews ?? 0}
                   profileImage={t.profileImage ?? undefined}
-                  verified={t.verificationStatus === "APPROVED"}
+                  verified={t.verified ?? t.verificationStatus === "APPROVED"}
+                  premium={t.premium ?? false}
+                  completedOrders={t.completedOrders ?? 0}
                 />
               ))}
             </div>

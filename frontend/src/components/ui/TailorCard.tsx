@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Star, Clock, ArrowRight, ShieldCheck } from "lucide-react";
+import { MapPin, Star, Clock, ArrowRight, ShieldCheck, Zap } from "lucide-react";
 
 interface TailorCardProps {
   id: number;
@@ -13,6 +13,8 @@ interface TailorCardProps {
   imagePlaceholder?: string;
   profileImage?: string;
   verified?: boolean;
+  premium?: boolean;
+  completedOrders?: number;
 }
 
 export default function TailorCard({
@@ -27,6 +29,8 @@ export default function TailorCard({
   imagePlaceholder,
   profileImage,
   verified = false,
+  premium = false,
+  completedOrders = 0,
 }: TailorCardProps) {
   const initials = shopName
     .split(" ")
@@ -56,11 +60,20 @@ export default function TailorCard({
               {initials}
             </div>
           )}
-          {verified && (
-            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-sm" title="Verified tailor">
-              <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
-            </div>
-          )}
+          {/* Verified + Premium badges — top-left overlay */}
+          <div className="absolute top-3 left-3 flex gap-1.5">
+            {premium && (
+              <div className="bg-amber-500 rounded-full px-2 py-1 flex items-center gap-1 shadow-sm" title="Premium tailor">
+                <Zap className="w-3 h-3 text-white fill-white" />
+                <span className="text-[10px] font-bold text-white">PREMIUM</span>
+              </div>
+            )}
+            {verified && !premium && (
+              <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-sm" title="Verified tailor">
+                <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+              </div>
+            )}
+          </div>
           <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 shadow-sm">
             {rating > 0 ? (
               <>
@@ -93,6 +106,12 @@ export default function TailorCard({
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
               <span>Delivery in {deliveryDays} days</span>
             </div>
+            {completedOrders > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                <Star className="w-3.5 h-3.5 flex-shrink-0 text-[#9CA3AF]" />
+                <span>{completedOrders} order{completedOrders !== 1 ? "s" : ""} completed</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t border-[#F3F4F6]">

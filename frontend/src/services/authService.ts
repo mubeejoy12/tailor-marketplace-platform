@@ -10,11 +10,12 @@ export interface RegisterPayload {
   role: Role;
 }
 
-export interface RegisterResponse {
-  id: number;
-  fullName: string;
+export interface AuthResponse {
+  token: string;
+  userId: number;
   email: string;
-  role: Role | "ADMIN";
+  fullName: string;
+  role: string;
 }
 
 export interface LoginPayload {
@@ -55,21 +56,20 @@ async function parseResponse<T>(res: Response): Promise<T> {
   }
 }
 
-export async function registerUser(payload: RegisterPayload): Promise<RegisterResponse> {
+export async function registerUser(payload: RegisterPayload): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return parseResponse<RegisterResponse>(res);
+  return parseResponse<AuthResponse>(res);
 }
 
-/** Returns raw JWT string on success */
-export async function loginUser(payload: LoginPayload): Promise<string> {
+export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return parseResponse<string>(res);
+  return parseResponse<AuthResponse>(res);
 }

@@ -6,10 +6,12 @@ import Footer from "@/components/Footer";
 import Button from "@/components/ui/Button";
 import {
   Package, CheckCircle, Scissors, Clock, Truck,
-  Loader2, AlertCircle, ChevronRight, User,
+  Loader2, AlertCircle, ChevronRight, User, Star, MessageSquare,
 } from "lucide-react";
 import { getOrdersByTailor, updateOrderStatus, OrderResponse } from "@/services/orderService";
 import { fetchTailorByUserId, TailorProfile } from "@/services/tailorService";
+import { getReviewsByTailor, ReviewResponse } from "@/services/reviewService";
+import StarRating from "@/components/ui/StarRating";
 import { getUser } from "@/lib/auth";
 import Link from "next/link";
 
@@ -140,6 +142,7 @@ function OrderCard({
 export default function TailorDashboardPage() {
   const [tailor,   setTailor]   = useState<TailorProfile | null>(null);
   const [orders,   setOrders]   = useState<OrderResponse[]>([]);
+  const [reviews,  setReviews]  = useState<ReviewResponse[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
   const [filter,   setFilter]   = useState<string>("ALL");
@@ -149,11 +152,15 @@ export default function TailorDashboardPage() {
     if (!user) { setError("Please log in to access your dashboard."); setLoading(false); return; }
 
     fetchTailorByUserId(user.id)
-      .then((profile) => {
+      .then(async (profile) => {
         setTailor(profile);
-        return getOrdersByTailor(profile.id);
+        const [fetchedOrders, fetchedReviews] = await Promise.all([
+          getOrdersByTailor(profile.id),
+          getReviewsByTailor(profile.id).catch(() => [] as ReviewResponse[]),
+        ]);
+        setOrders(fetchedOrders);
+        setReviews(fetchedReviews);
       })
-      .then(setOrders)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load dashboard."))
       .finally(() => setLoading(false));
   }, []);
@@ -193,8 +200,20 @@ export default function TailorDashboardPage() {
           </div>
 
           {/* Stats bar */}
-          {!loading && !error && orders.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-6">
+          {!loading && !error && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-6">
+              {/* Rating summary */}
+              <div className="col-span-2 bg-[#0F766E]/5 rounded-xl p-3 border border-[#0F766E]/20 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#0F766E]/10 flex items-center justify-center flex-shrink-0">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-[#111111]">
+                    {tailor && Number(tailor.rating) > 0 ? Number(tailor.rating).toFixed(1) : "—"}
+                  </p>
+                  <p className="text-xs text-[#6B7280]">{reviews.length} review{reviews.length !== 1 ? "s" : ""}</p>
+                </div>
+              </div>
               {STATUS_FILTERS.slice(1).map((s) => {
                 const m = STATUS_META[s];
                 return (
@@ -271,6 +290,52 @@ export default function TailorDashboardPage() {
           </>
         )}
       </div>
+
+      {/* ── Latest Reviews ────────────────────────────────────────────────── */}
+      {!loading && !error && reviews.length > 0 && (
+        <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#0F766E]" />
+                <h2 className="text-sm font-semibold text-[#111111]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  Latest Reviews
+                </h2>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <StarRating rating={Number(tailor?.rating ?? 0)} size="sm" />
+                <span className="text-xs font-semibold text-[#111111]">
+                  {Number(tailor?.rating ?? 0).toFixed(1)}
+                </span>
+                <span className="text-xs text-[#9CA3AF]">({reviews.length})</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {reviews.slice(0, 5).map((r) => (
+                <div key={r.id} className="flex gap-3 pb-4 border-b border-[#F3F4F6] last:border-0 last:pb-0">
+                  {/* Avatar */}
+                  <div className="w-8 h-8 rounded-full bg-[#0F766E]/10 flex items-center justify-center text-xs font-bold text-[#0F766E] flex-shrink-0">
+                    {r.reviewerName ? r.reviewerName.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() : "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <p className="text-xs font-semibold text-[#111111]">{r.reviewerName}</p>
+                      <p className="text-[10px] text-[#9CA3AF] flex-shrink-0">
+                        {new Date(r.createdAt).toLocaleDateString("en-NG", { month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                    <StarRating rating={r.rating} size="sm" />
+                    {r.comment && (
+                      <p className="text-xs text-[#6B7280] mt-1 leading-relaxed line-clamp-2">{r.comment}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
