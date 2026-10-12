@@ -38,6 +38,10 @@ PUT /api/designs/{id}
 
 DELETE /api/designs/{id}
 
+GET /api/designs/tailor/{tailorId}
+
+List filters: keyword, category, tailorId, minPrice, maxPrice, page, size, sortBy (see DESIGN_CATALOG_MODULE.md)
+
 ---
 
 # Measurements

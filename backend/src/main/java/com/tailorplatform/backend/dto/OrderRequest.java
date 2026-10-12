@@ -18,6 +18,9 @@ public class OrderRequest {
 
     private Long measurementId;
 
+    /** Optional catalog design — when set, the server prices the order from it */
+    private Long designId;
+
     @NotBlank(message = "styleChoice is required")
     private String styleChoice;
 

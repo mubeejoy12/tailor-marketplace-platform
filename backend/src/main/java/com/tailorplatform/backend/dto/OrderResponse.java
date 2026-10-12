@@ -17,6 +17,7 @@ public class OrderResponse {
     private Long userId;
     private Long tailorId;
     private Long measurementId;
+    private Long designId;
     private String styleChoice;
     private String fabricChoice;
     private Double amount;
@@ -45,6 +46,7 @@ public class OrderResponse {
                 .userId(order.getUserId())
                 .tailorId(order.getTailorId())
                 .measurementId(order.getMeasurementId())
+                .designId(order.getDesignId())
                 .styleChoice(order.getStyleChoice())
                 .fabricChoice(order.getFabricChoice())
                 .amount(order.getAmount())

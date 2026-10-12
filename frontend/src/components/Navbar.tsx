@@ -235,6 +235,7 @@ function MobileMenu({
         {/* Nav links */}
         {[
           { href: "/tailors",      label: "Browse Tailors" },
+          { href: "/designs",      label: "Designs"        },
           { href: "/measurements", label: "Measurements"   },
         ].map(({ href, label }) => (
           <Link
@@ -329,6 +330,12 @@ export default function Navbar() {
               className="px-3 py-2 rounded-lg text-sm font-medium text-[#6B7280] hover:text-[#111111] hover:bg-[#F9FAFB] transition-colors"
             >
               Browse Tailors
+            </Link>
+            <Link
+              href="/designs"
+              className="px-3 py-2 rounded-lg text-sm font-medium text-[#6B7280] hover:text-[#111111] hover:bg-[#F9FAFB] transition-colors"
+            >
+              Designs
             </Link>
             <Link
               href="/measurements"

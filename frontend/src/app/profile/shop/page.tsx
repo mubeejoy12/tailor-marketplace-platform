@@ -6,6 +6,7 @@
  * TAILOR-only page. Allows a tailor to:
  *  - Create their shop profile (first-time setup)
  *  - Edit shop name, location, specialization, and profile image URL
+ *  - Manage the designs listed in the catalog (see ShopDesignsManager)
  *
  * Backend endpoints used:
  *  - GET  /api/tailors/user/{userId}  → fetch existing profile
@@ -18,6 +19,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AccountSidebar from "@/components/AccountSidebar";
+import ShopDesignsManager from "@/components/ShopDesignsManager";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import {
@@ -344,6 +346,9 @@ export default function ShopProfilePage() {
                     )}
                   </div>
                 </div>
+
+                {/* Catalog designs — available once the shop exists */}
+                {profile && <ShopDesignsManager tailorId={profile.id} />}
 
                 {/* Verification CTA — only shown if profile exists and not verified */}
                 {profile && profile.verificationStatus !== "APPROVED" && (

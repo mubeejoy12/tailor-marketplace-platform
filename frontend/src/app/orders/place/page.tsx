@@ -9,6 +9,7 @@ import InputField from "@/components/ui/InputField";
 import { Check, MapPin, Star, Clock, ChevronRight, Package, Loader2, AlertCircle } from "lucide-react";
 import { fetchTailorById, TailorProfile } from "@/services/tailorService";
 import { placeOrder } from "@/services/orderService";
+import { getDesignsByTailor, formatNaira, Design } from "@/services/designService";
 import { getUser } from "@/lib/auth";
 
 const FABRICS = [
@@ -19,11 +20,13 @@ const FABRICS = [
   { id: "own",     label: "I Have My Own Fabric",  desc: "Customer-supplied material" },
 ];
 
-const DESIGNS = ["Agbada (3-piece)", "Senator Suit", "Dashiki", "Kaftan", "Boubou", "Custom Design"];
+/** Generic styles for custom orders that aren't tied to a catalog design */
+const CUSTOM_STYLES = ["Agbada (3-piece)", "Senator Suit", "Dashiki", "Kaftan", "Boubou", "Custom Design"];
 
 export default function PlaceOrderPage() {
   const router = useRouter();
   const [tailorId, setTailorId] = useState<string | null>(null);
+  const [initialDesignId, setInitialDesignId] = useState<number | null>(null);
 
   const [tailor, setTailor]                 = useState<TailorProfile | null>(null);
   const [tailorLoading, setTailorLoading]   = useState(true);
@@ -31,6 +34,9 @@ export default function PlaceOrderPage() {
 
   const [selectedFabric, setSelectedFabric]   = useState("ankara");
   const [selectedDesign, setSelectedDesign]   = useState("Agbada (3-piece)");
+  const [designs, setDesigns]                 = useState<Design[]>([]);
+  // null = custom order using one of CUSTOM_STYLES
+  const [selectedDesignId, setSelectedDesignId] = useState<number | null>(null);
   const [deliveryDate, setDeliveryDate]       = useState("");
   const [notes, setNotes]                     = useState("");
 
@@ -38,18 +44,35 @@ export default function PlaceOrderPage() {
   const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("tailorId");
-    setTailorId(id);
+    const params = new URLSearchParams(window.location.search);
+    setTailorId(params.get("tailorId"));
+    const designParam = Number(params.get("designId"));
+    if (designParam) setInitialDesignId(designParam);
   }, []);
 
   useEffect(() => {
     if (tailorId === null) return;
     if (!tailorId) { setTailorError("No tailor selected."); setTailorLoading(false); return; }
-    fetchTailorById(tailorId)
-      .then(setTailor)
+    Promise.all([
+      fetchTailorById(tailorId),
+      // A tailor without designs (or a failed lookup) still accepts custom orders
+      getDesignsByTailor(tailorId).catch(() => [] as Design[]),
+    ])
+      .then(([t, d]) => {
+        setTailor(t);
+        setDesigns(d);
+        if (initialDesignId && d.some((x) => x.id === initialDesignId)) {
+          setSelectedDesignId(initialDesignId);
+        } else if (d.length > 0) {
+          setSelectedDesignId(d[0].id);
+        }
+      })
       .catch((e: unknown) => setTailorError(e instanceof Error ? e.message : "Could not load tailor."))
       .finally(() => setTailorLoading(false));
-  }, [tailorId]);
+  }, [tailorId, initialDesignId]);
+
+  const chosenDesign = designs.find((d) => d.id === selectedDesignId) ?? null;
+  const styleLabel   = chosenDesign ? chosenDesign.title : selectedDesign;
 
   async function handleSubmit() {
     if (!tailor) return;
@@ -62,7 +85,8 @@ export default function PlaceOrderPage() {
       const order = await placeOrder({
         userId:      Number(user.id),
         tailorId:    tailor.id,
-        styleChoice: selectedDesign,
+        designId:    chosenDesign?.id ?? null,
+        styleChoice: styleLabel,
         fabricChoice: FABRICS.find((f) => f.id === selectedFabric)?.label ?? selectedFabric,
         deliveryDate: deliveryDate || null,
       });
@@ -135,13 +159,45 @@ export default function PlaceOrderPage() {
               {/* Design */}
               <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5">
                 <h2 className="text-sm font-semibold text-[#111111] mb-4" style={{ fontFamily: "Poppins, sans-serif" }}>Select Design</h2>
+
+                {designs.length > 0 && (
+                  <div className="space-y-2 mb-5">
+                    {designs.map((d) => (
+                      <button
+                        key={d.id}
+                        onClick={() => setSelectedDesignId(d.id)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                          selectedDesignId === d.id
+                            ? "border-[#0F766E] bg-[#CCFBF1]/20"
+                            : "border-[#E5E7EB] hover:border-[#0F766E]/50"
+                        }`}
+                      >
+                        {d.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={d.imageUrl} alt={d.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-[#F3F4F6] flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-[#111111] truncate">{d.title}</p>
+                          <p className="text-xs text-[#6B7280]">{d.category}</p>
+                        </div>
+                        <p className="text-sm font-semibold text-[#0F766E]">{formatNaira(d.price)}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {designs.length > 0 && (
+                  <p className="text-xs font-medium text-[#6B7280] mb-2">Or request a custom style</p>
+                )}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {DESIGNS.map((d) => (
+                  {CUSTOM_STYLES.map((d) => (
                     <button
                       key={d}
-                      onClick={() => setSelectedDesign(d)}
+                      onClick={() => { setSelectedDesign(d); setSelectedDesignId(null); }}
                       className={`px-4 py-3 rounded-xl text-sm font-medium border transition-all text-left ${
-                        selectedDesign === d
+                        selectedDesignId === null && selectedDesign === d
                           ? "bg-[#0F766E] text-white border-[#0F766E]"
                           : "bg-white text-[#6B7280] border-[#E5E7EB] hover:border-[#0F766E]"
                       }`}
@@ -211,7 +267,7 @@ export default function PlaceOrderPage() {
                 <div className="space-y-3 mb-5">
                   {[
                     { label: "Tailor",   value: tailor.shopName },
-                    { label: "Design",   value: selectedDesign },
+                    { label: "Design",   value: styleLabel },
                     { label: "Fabric",   value: FABRICS.find((f) => f.id === selectedFabric)?.label ?? "" },
                     { label: "Delivery", value: deliveryDate || "TBD" },
                   ].map(({ label, value }) => (
@@ -224,10 +280,14 @@ export default function PlaceOrderPage() {
 
                 <div className="border-t border-[#E5E7EB] pt-4 mb-5">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-[#111111]">Starting Price</span>
-                    <span className="text-lg font-bold text-[#0F766E]" style={{ fontFamily: "Poppins, sans-serif" }}>₦20,000</span>
+                    <span className="text-sm font-semibold text-[#111111]">{chosenDesign ? "Price" : "Custom Order"}</span>
+                    <span className="text-lg font-bold text-[#0F766E]" style={{ fontFamily: "Poppins, sans-serif" }}>
+                      {chosenDesign ? formatNaira(chosenDesign.price) : "Quote"}
+                    </span>
                   </div>
-                  <p className="text-xs text-[#6B7280] mt-1">Final price confirmed after tailor review</p>
+                  <p className="text-xs text-[#6B7280] mt-1">
+                    {chosenDesign ? "Listed price for this design" : "Your tailor will quote a price after reviewing your request"}
+                  </p>
                 </div>
 
                 {submitError && (

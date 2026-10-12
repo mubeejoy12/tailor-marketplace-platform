@@ -2,6 +2,7 @@ package com.tailorplatform.backend.service;
 
 import com.tailorplatform.backend.dto.OrderRequest;
 import com.tailorplatform.backend.dto.OrderResponse;
+import com.tailorplatform.backend.entity.Design;
 import com.tailorplatform.backend.entity.Order;
 import com.tailorplatform.backend.entity.TailorProfile;
 import com.tailorplatform.backend.repository.OrderRepository;
@@ -24,6 +25,7 @@ public class OrderService {
     private final TailorProfileRepository tailorProfileRepository;
     private final NotificationService     notificationService;
     private final VerificationService     verificationService;
+    private final DesignService           designService;
 
     // ─── Allowed status transitions (strict business flow) ───────────────────
     private static final Map<String, String> NEXT_STATUS = Map.of(
@@ -43,13 +45,26 @@ public class OrderService {
         TailorProfile tailor = tailorProfileRepository.findById(req.getTailorId())
                 .orElseThrow(() -> new IllegalArgumentException("Tailor not found: " + req.getTailorId()));
 
+        // Catalog orders take their title and price from the design, not the client
+        String styleChoice = req.getStyleChoice();
+        Double amount      = req.getAmount();
+        if (req.getDesignId() != null) {
+            Design design = designService.findDesign(req.getDesignId());
+            if (!design.getTailor().getId().equals(tailor.getId())) {
+                throw new IllegalStateException("Design " + design.getId() + " is not offered by this tailor.");
+            }
+            styleChoice = design.getTitle();
+            amount      = design.getPrice().doubleValue();
+        }
+
         Order order = Order.builder()
                 .userId(req.getUserId())
                 .tailorId(req.getTailorId())
                 .measurementId(req.getMeasurementId())
-                .styleChoice(req.getStyleChoice())
+                .designId(req.getDesignId())
+                .styleChoice(styleChoice)
                 .fabricChoice(req.getFabricChoice())
-                .amount(req.getAmount())
+                .amount(amount)
                 .paymentStatus("PENDING")
                 .orderStatus("NEW")
                 .deliveryDate(req.getDeliveryDate())

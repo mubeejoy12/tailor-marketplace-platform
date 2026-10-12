@@ -4,6 +4,7 @@ export interface OrderRequest {
   userId: number;
   tailorId: number;
   measurementId?: number | null;
+  designId?: number | null;       // catalog design — server sets price from it
   styleChoice: string;
   fabricChoice: string;
   amount?: number | null;
@@ -15,6 +16,7 @@ export interface OrderResponse {
   userId: number;
   tailorId: number;
   measurementId: number | null;
+  designId: number | null;
   styleChoice: string;
   fabricChoice: string;
   amount: number | null;

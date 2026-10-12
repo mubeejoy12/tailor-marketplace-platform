@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { fetchTailorById } from "@/services/tailorService";
 import type { TailorProfile } from "@/services/tailorService";
 import { getReviewsByTailor, ReviewResponse } from "@/services/reviewService";
+import { getDesignsByTailor, Design } from "@/services/designService";
+import DesignCard from "@/components/ui/DesignCard";
 import { getOrCreateConversation } from "@/services/messageService";
 import { getUser } from "@/lib/auth";
 
@@ -58,6 +60,7 @@ export default function TailorDetailPage() {
 
   const [tailor,  setTailor]  = useState<TailorProfile | null>(null);
   const [reviews, setReviews] = useState<ReviewResponse[]>([]);
+  const [designs, setDesigns] = useState<Design[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
   const [messaging, setMessaging] = useState(false);
@@ -67,8 +70,10 @@ export default function TailorDetailPage() {
     Promise.all([
       fetchTailorById(tailorId),
       getReviewsByTailor(Number(tailorId)),
+      // Designs are a nice-to-have on this page — don't fail the profile if they can't load
+      getDesignsByTailor(tailorId).catch(() => [] as Design[]),
     ])
-      .then(([t, r]) => { setTailor(t); setReviews(r); })
+      .then(([t, r, d]) => { setTailor(t); setReviews(r); setDesigns(d); })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : "Tailor not found."))
       .finally(() => setLoading(false));
   }, [tailorId]);
@@ -193,6 +198,20 @@ export default function TailorDetailPage() {
                   Based in {tailor.location}, they bring craftsmanship and precision to every order.
                 </p>
               </div>
+
+              {/* Designs — catalog items customers can order directly */}
+              {designs.length > 0 && (
+                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-semibold text-[#111111]"
+                      style={{ fontFamily: "Poppins, sans-serif" }}>Designs</h2>
+                    <span className="text-xs text-[#9CA3AF]">{designs.length} available</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {designs.map((d) => <DesignCard key={d.id} design={d} showTailor={false} />)}
+                  </div>
+                </div>
+              )}
 
               {/* Portfolio */}
               <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6">

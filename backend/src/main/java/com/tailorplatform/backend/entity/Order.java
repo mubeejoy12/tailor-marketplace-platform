@@ -37,6 +37,9 @@ public class Order {
 
     private Long measurementId;
 
+    /** Catalog design this order was placed from (null for fully custom orders) */
+    private Long designId;
+
     private String styleChoice;
 
     private String fabricChoice;
