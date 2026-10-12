@@ -7,6 +7,7 @@ import com.tailorplatform.backend.entity.TailorProfile;
 import com.tailorplatform.backend.entity.VerificationRequest;
 import com.tailorplatform.backend.repository.TailorProfileRepository;
 import com.tailorplatform.backend.repository.VerificationRequestRepository;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class VerificationService {
     private final VerificationRequestRepository verificationRepo;
     private final TailorProfileRepository       tailorRepo;
     private final NotificationService           notificationService;
+    private final AccessGuard                   accessGuard;
 
     // ─── Submit verification request (tailor action) ──────────────────────────
 
@@ -46,6 +48,7 @@ public class VerificationService {
         TailorProfile tailor = tailorRepo.findById(req.getTailorId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Tailor profile not found: " + req.getTailorId()));
+        accessGuard.requireTailorOwner(req.getTailorId());
 
         // Guard: already verified
         if (Boolean.TRUE.equals(tailor.getVerified())) {
@@ -181,6 +184,7 @@ public class VerificationService {
     // ─── Get latest request for a tailor ─────────────────────────────────────
 
     public VerificationRequestResponse getLatestForTailor(Long tailorId) {
+        accessGuard.requireTailorOwner(tailorId);
         return verificationRepo.findFirstByTailorIdOrderBySubmittedAtDesc(tailorId)
                 .map(r -> toResponse(r, resolveProfile(r.getTailorId())))
                 .orElseThrow(() -> new IllegalArgumentException(

@@ -7,6 +7,7 @@ import com.tailorplatform.backend.dto.PaymentVerifyResponse;
 import com.tailorplatform.backend.entity.Order;
 import com.tailorplatform.backend.repository.OrderRepository;
 import lombok.Data;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,7 @@ public class PaymentService {
     private final OrderRepository     orderRepository;
     private final RestTemplate        restTemplate;
     private final NotificationService notificationService;
+    private final AccessGuard         accessGuard;
 
     @Value("${paystack.secret-key}")
     private String paystackSecretKey;
@@ -96,6 +98,7 @@ public class PaymentService {
 
         Order order = orderRepository.findById(req.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + req.getOrderId()));
+        accessGuard.requireSelf(order.getUserId());
 
         // Duplicate payment guard
         if ("PAID".equals(order.getPaymentStatus())) {
@@ -104,7 +107,12 @@ public class PaymentService {
 
         String reference = generateReference();
         // Paystack requires amount in kobo (Naira × 100)
-        long amountInKobo = Math.round(req.getAmount() * 100);
+        // A priced order (e.g. from a catalog design) is charged its own amount, never the client's
+        Double amount = order.getAmount() != null ? order.getAmount() : req.getAmount();
+        if (amount == null || amount <= 0) {
+            throw new IllegalStateException("Order " + order.getId() + " has no price to pay yet.");
+        }
+        long amountInKobo = Math.round(amount * 100);
 
         // Embed orderId in Paystack metadata — survives even if callback URL params are lost
         Map<String, Object> metadata = new HashMap<>();
@@ -213,6 +221,9 @@ public class PaymentService {
                 .or(() -> Optional.ofNullable(orderId).flatMap(orderRepository::findById))
                 .or(() -> Optional.ofNullable(resolvedFromMetadata).flatMap(orderRepository::findById))
                 .orElse(null);
+        if (order != null) {
+            accessGuard.requireSelf(order.getUserId());
+        }
 
         // Idempotent status update + notification
         if (paid && order != null && !"PAID".equals(order.getPaymentStatus())) {

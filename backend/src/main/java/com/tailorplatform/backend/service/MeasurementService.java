@@ -6,6 +6,7 @@ import com.tailorplatform.backend.entity.Measurement;
 import com.tailorplatform.backend.entity.User;
 import com.tailorplatform.backend.repository.MeasurementRepository;
 import com.tailorplatform.backend.repository.UserRepository;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +19,10 @@ public class MeasurementService {
 
     private final MeasurementRepository measurementRepository;
     private final UserRepository userRepository;
+    private final AccessGuard accessGuard;
 
     public MeasurementResponse saveMeasurement(MeasurementRequest request) {
+        accessGuard.requireSelf(request.getUserId());
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + request.getUserId()));
 
@@ -40,20 +43,26 @@ public class MeasurementService {
     }
 
     public List<MeasurementResponse> getMeasurementsByUser(Long userId) {
+        accessGuard.requireSelf(userId);
         return measurementRepository.findByUserId(userId).stream()
                 .map(MeasurementResponse::from)
                 .collect(Collectors.toList());
     }
 
     public MeasurementResponse getMeasurement(Long id) {
+        return MeasurementResponse.from(findOwned(id));
+    }
+
+    /** Loads a measurement the caller owns (admins may load any). */
+    private Measurement findOwned(Long id) {
         Measurement m = measurementRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Measurement not found: " + id));
-        return MeasurementResponse.from(m);
+        accessGuard.requireSelf(m.getUser().getId());
+        return m;
     }
 
     public MeasurementResponse updateMeasurement(Long id, MeasurementRequest request) {
-        Measurement m = measurementRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Measurement not found: " + id));
+        Measurement m = findOwned(id);
 
         m.setChest(request.getChest());
         m.setWaist(request.getWaist());
@@ -69,9 +78,6 @@ public class MeasurementService {
     }
 
     public void deleteMeasurement(Long id) {
-        if (!measurementRepository.existsById(id)) {
-            throw new IllegalArgumentException("Measurement not found: " + id);
-        }
-        measurementRepository.deleteById(id);
+        measurementRepository.delete(findOwned(id));
     }
 }

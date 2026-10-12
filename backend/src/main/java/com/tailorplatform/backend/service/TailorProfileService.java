@@ -9,6 +9,7 @@ import com.tailorplatform.backend.entity.User;
 import com.tailorplatform.backend.repository.TailorProfileRepository;
 import com.tailorplatform.backend.repository.UserRepository;
 import com.tailorplatform.backend.specification.TailorSearchSpecification;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,8 +30,10 @@ public class TailorProfileService {
     private final TailorProfileRepository tailorProfileRepository;
     private final UserRepository          userRepository;
     private final NotificationService     notificationService;
+    private final AccessGuard             accessGuard;
 
     public TailorProfileResponse createProfile(TailorProfileRequest request) {
+        accessGuard.requireSelf(request.getUserId());
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -85,6 +88,7 @@ public class TailorProfileService {
     public TailorProfileResponse updateProfile(Long id, TailorProfileRequest request) {
         TailorProfile profile = tailorProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tailor profile not found"));
+        accessGuard.requireTailorOwner(id);
 
         profile.setShopName(request.getShopName());
         profile.setLocation(request.getLocation());
@@ -100,6 +104,7 @@ public class TailorProfileService {
     public TailorProfileResponse submitVerification(Long tailorId, TailorVerificationRequest req) {
         TailorProfile profile = tailorProfileRepository.findById(tailorId)
                 .orElseThrow(() -> new IllegalArgumentException("Tailor profile not found: " + tailorId));
+        accessGuard.requireTailorOwner(tailorId);
 
         if ("APPROVED".equals(profile.getVerificationStatus())) {
             throw new IllegalStateException("Tailor is already verified.");

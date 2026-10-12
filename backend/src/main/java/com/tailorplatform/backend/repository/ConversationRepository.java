@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
     Optional<Conversation> findByCustomerIdAndTailorId(Long customerId, Long tailorId);
 
-    /** All conversations where the user is either the customer or the tailor */
+    List<Conversation> findByCustomerIdOrderByLastMessageAtDesc(Long customerId);
+
+    /** All conversations where the user is the customer, or their tailor profile is the tailor */
     List<Conversation> findByCustomerIdOrTailorIdOrderByLastMessageAtDesc(Long customerId, Long tailorId);
 }

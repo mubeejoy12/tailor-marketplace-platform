@@ -3,6 +3,7 @@ package com.tailorplatform.backend.service;
 import com.tailorplatform.backend.dto.AuthResponse;
 import com.tailorplatform.backend.dto.LoginRequest;
 import com.tailorplatform.backend.dto.RegisterRequest;
+import com.tailorplatform.backend.entity.Role;
 import com.tailorplatform.backend.entity.User;
 import com.tailorplatform.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,11 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
+
+        // Admin accounts are never self-service; promote an existing user in the database instead
+        if (request.getRole() == Role.ADMIN) {
+            throw new IllegalStateException("You can only register as a customer or a tailor.");
+        }
 
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalStateException("An account with this email already exists.");

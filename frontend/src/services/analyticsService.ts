@@ -32,14 +32,19 @@ export interface AdminAnalytics {
   topTailors: Array<{ tailorId: number; shopName: string; completedOrders: number; rating: number }>;
 }
 
+function authHeaders(): Record<string, string> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("tailor_token") : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function getTailorAnalytics(tailorId: number): Promise<TailorAnalytics> {
-  const res = await fetch(`${API_BASE}/api/analytics/tailor/${tailorId}`);
+  const res = await fetch(`${API_BASE}/api/analytics/tailor/${tailorId}`, { headers: authHeaders() });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function getAdminAnalytics(): Promise<AdminAnalytics> {
-  const res = await fetch(`${API_BASE}/api/analytics/admin`);
+  const res = await fetch(`${API_BASE}/api/analytics/admin`, { headers: authHeaders() });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

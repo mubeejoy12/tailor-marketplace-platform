@@ -107,3 +107,47 @@ Store secrets in your CI/CD platform's secure variable store:
 - **Jenkins**: Use Credentials Plugin
 
 Never expose these values in logs or build artifacts.
+
+---
+
+## API Authentication & Authorization
+
+Every request may carry `Authorization: Bearer <jwt>` (issued by `/api/auth/login` and
+`/api/auth/register`). `security/JwtAuthenticationFilter` verifies it and exposes the caller
+as an `AuthenticatedUser` (userId, email, role).
+
+### Route rules (`config/SecurityConfig.java`)
+
+| Access | Routes |
+|--------|--------|
+| Public | `/api/auth/**`, `POST /api/payments/webhook` (HMAC-signed by Paystack), `POST /api/measurements/ai-suggest`, `GET` tailor browsing (`/api/tailors`, `/{id}`, `/user/{userId}`, `/search/**`), `GET /api/designs/**`, `GET /api/reviews/tailor/**`, `GET /api/reviews/order/{id}/exists`, `GET /api/recommendations` |
+| ADMIN  | `/api/admin/**`, `/api/analytics/admin` |
+| TAILOR or ADMIN | `POST`/`PUT /api/tailors/**`, `PUT /api/orders/{id}/status`, `/api/analytics/tailor/**`, design writes |
+| Any logged-in user | everything else |
+
+Missing/invalid token → **401**; wrong role or someone else's resource → **403**.
+
+### Ownership rules (`security/AccessGuard.java`, applied in the services)
+
+Admins pass every ownership check.
+
+- **Own data only:** measurements, notifications, user profile, conversations list, orders list.
+  Any `userId` in a path or body must be the caller's.
+- **Orders:** placed only as yourself, with your own measurement. Viewed by the customer or the
+  order's tailor. Status is advanced only by the order's tailor.
+- **Tailor profile, verification, tailor analytics, tailor's order list:** only the profile's owner.
+- **Messages:** only the conversation's customer or the owner of its tailor profile can read or send.
+  `conversation.tailorId` is the tailor's *profile* id.
+- **Reviews:** only for your own delivered order, and always credited to that order's tailor.
+- **Payments:** only the order's customer can initialize or verify. A priced order is always charged
+  its stored amount, whatever the client sends.
+
+### Admin accounts
+
+Registration rejects `role: ADMIN`. To create an admin, register a normal account and promote it:
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'admin@example.com';
+```
+
+The user must log in again afterwards so their token carries the new role.

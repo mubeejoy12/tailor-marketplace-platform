@@ -5,9 +5,12 @@ import com.tailorplatform.backend.dto.OrderResponse;
 import com.tailorplatform.backend.entity.Design;
 import com.tailorplatform.backend.entity.Order;
 import com.tailorplatform.backend.entity.TailorProfile;
+import com.tailorplatform.backend.repository.MeasurementRepository;
 import com.tailorplatform.backend.repository.OrderRepository;
 import com.tailorplatform.backend.repository.TailorProfileRepository;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +29,8 @@ public class OrderService {
     private final NotificationService     notificationService;
     private final VerificationService     verificationService;
     private final DesignService           designService;
+    private final MeasurementRepository   measurementRepository;
+    private final AccessGuard             accessGuard;
 
     // ─── Allowed status transitions (strict business flow) ───────────────────
     private static final Map<String, String> NEXT_STATUS = Map.of(
@@ -40,6 +45,13 @@ public class OrderService {
     public OrderResponse placeOrder(OrderRequest req) {
         if (req.getTailorId() == null) {
             throw new IllegalArgumentException("tailorId is required");
+        }
+        accessGuard.requireSelf(req.getUserId());
+
+        if (req.getMeasurementId() != null) {
+            measurementRepository.findById(req.getMeasurementId())
+                    .filter(m -> m.getUser().getId().equals(req.getUserId()))
+                    .orElseThrow(() -> new AccessDeniedException("You can only attach your own measurements."));
         }
 
         TailorProfile tailor = tailorProfileRepository.findById(req.getTailorId())
@@ -87,6 +99,7 @@ public class OrderService {
     // ─── Get orders ──────────────────────────────────────────────────────────
 
     public List<OrderResponse> getOrdersByUser(Long userId) {
+        accessGuard.requireSelf(userId);
         return orderRepository.findByUserId(userId).stream()
                 .map(order -> OrderResponse.from(order, resolveTailor(order.getTailorId())))
                 .collect(Collectors.toList());
@@ -95,10 +108,12 @@ public class OrderService {
     public OrderResponse getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        requireOrderParticipant(order);
         return OrderResponse.from(order, resolveTailor(order.getTailorId()));
     }
 
     public List<OrderResponse> getOrdersByTailor(Long tailorId) {
+        accessGuard.requireTailorOwner(tailorId);
         return orderRepository.findByTailorId(tailorId).stream()
                 .map(order -> OrderResponse.from(order, resolveTailor(order.getTailorId())))
                 .collect(Collectors.toList());
@@ -110,6 +125,9 @@ public class OrderService {
     public OrderResponse updateOrderStatus(Long orderId, String requestedStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+
+        // Only the tailor fulfilling the order (or an admin) moves it along
+        accessGuard.requireTailorOwner(order.getTailorId());
 
         String currentStatus = order.getOrderStatus();
         String allowedNext   = NEXT_STATUS.get(currentStatus);
@@ -152,7 +170,16 @@ public class OrderService {
         return OrderResponse.from(saved, resolveTailor(saved.getTailorId()));
     }
 
-    // ─── Helper ──────────────────────────────────────────────────────────────
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    /** The customer who placed the order, its tailor, or an admin. */
+    private void requireOrderParticipant(Order order) {
+        var caller = accessGuard.currentUser();
+        if (caller.isAdmin() || caller.userId().equals(order.getUserId())) return;
+        if (!accessGuard.ownsTailorProfile(order.getTailorId())) {
+            throw new AccessDeniedException("You can only view your own orders.");
+        }
+    }
 
     private TailorProfile resolveTailor(Long tailorId) {
         if (tailorId == null) return null;

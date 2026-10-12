@@ -41,10 +41,7 @@ design, ignoring any client-sent values.
 
 ## Authentication
 
-This module introduced `security/JwtAuthenticationFilter`, which verifies the
-`Authorization: Bearer <token>` header and puts an `AuthenticatedUser`
-(`userId`, `email`, `role`) in the SecurityContext. Only the design write routes require
-it so far; every other route is still `permitAll` in `SecurityConfig`.
+See the API Authentication section in `SECURITY_CONFIG.md`.
 
 ## Frontend
 

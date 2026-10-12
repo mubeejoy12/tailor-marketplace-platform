@@ -3,6 +3,7 @@ package com.tailorplatform.backend.service;
 import com.tailorplatform.backend.dto.NotificationResponse;
 import com.tailorplatform.backend.entity.Notification;
 import com.tailorplatform.backend.repository.NotificationRepository;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final AccessGuard            accessGuard;
 
     // ─── Internal helper — called by other services ───────────────────────────
 
@@ -32,6 +34,7 @@ public class NotificationService {
     // ─── Public API ───────────────────────────────────────────────────────────
 
     public List<NotificationResponse> getByUser(Long userId) {
+        accessGuard.requireSelf(userId);
         return notificationRepository
                 .findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
@@ -40,17 +43,20 @@ public class NotificationService {
     }
 
     public long getUnreadCount(Long userId) {
+        accessGuard.requireSelf(userId);
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
 
     public NotificationResponse markRead(Long notificationId) {
         Notification n = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found: " + notificationId));
+        accessGuard.requireSelf(n.getUserId());
         n.setIsRead(true);
         return NotificationResponse.from(notificationRepository.save(n));
     }
 
     public void markAllRead(Long userId) {
+        accessGuard.requireSelf(userId);
         notificationRepository.markAllReadByUserId(userId);
     }
 }

@@ -5,6 +5,7 @@ import com.tailorplatform.backend.dto.TailorAnalyticsResponse;
 import com.tailorplatform.backend.entity.Order;
 import com.tailorplatform.backend.entity.TailorProfile;
 import com.tailorplatform.backend.repository.*;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +24,14 @@ public class AnalyticsService {
     private final TailorProfileRepository tailorProfileRepository;
     private final ReviewRepository        reviewRepository;
     private final UserRepository          userRepository;
+    private final AccessGuard             accessGuard;
 
     private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     // ─── Tailor Analytics ────────────────────────────────────────────────────
 
     public TailorAnalyticsResponse getTailorAnalytics(Long tailorId) {
+        accessGuard.requireTailorOwner(tailorId);
         List<Order> orders = orderRepository.findByTailorId(tailorId);
         var reviews        = reviewRepository.findByTailorIdOrderByCreatedAtDesc(tailorId);
 

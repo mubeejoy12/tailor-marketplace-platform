@@ -10,6 +10,7 @@ import com.tailorplatform.backend.repository.OrderRepository;
 import com.tailorplatform.backend.repository.ReviewRepository;
 import com.tailorplatform.backend.repository.TailorProfileRepository;
 import com.tailorplatform.backend.repository.UserRepository;
+import com.tailorplatform.backend.security.AccessGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -30,6 +31,7 @@ public class ReviewService {
     private final OrderRepository         orderRepository;
     private final TailorProfileRepository tailorProfileRepository;
     private final UserRepository          userRepository;
+    private final AccessGuard             accessGuard;
     @Lazy
     private final VerificationService     verificationService;
 
@@ -37,12 +39,18 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse submitReview(ReviewRequest req) {
+        accessGuard.requireSelf(req.getUserId());
+
         // 1. Verify the order exists and belongs to this user
         Order order = orderRepository.findById(req.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + req.getOrderId()));
 
         if (!order.getUserId().equals(req.getUserId())) {
             throw new IllegalArgumentException("This order does not belong to you.");
+        }
+        // The review counts toward the tailor who fulfilled the order, whatever the client sent
+        if (!order.getTailorId().equals(req.getTailorId())) {
+            throw new IllegalStateException("This order was not fulfilled by tailor " + req.getTailorId() + ".");
         }
 
         // 2. Only DELIVERED orders can be reviewed
