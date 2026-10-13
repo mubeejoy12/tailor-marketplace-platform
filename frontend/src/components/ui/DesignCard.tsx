@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { optimizedImage } from "@/lib/cloudinary";
 import { MapPin, ShieldCheck, Shirt, Star } from "lucide-react";
 import type { Design } from "@/services/designService";
 import { formatNaira } from "@/services/designService";
@@ -16,7 +17,7 @@ export default function DesignCard({ design, showTailor = true }: DesignCardProp
         {design.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={design.imageUrl}
+            src={optimizedImage(design.imageUrl, { width: 400, height: 300 })}
             alt={design.title}
             className="w-full h-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}

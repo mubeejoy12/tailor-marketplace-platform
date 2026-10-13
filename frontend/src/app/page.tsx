@@ -1,10 +1,12 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TailorCard from "@/components/ui/TailorCard";
-import FilterChip from "@/components/ui/FilterChip";
 import Button from "@/components/ui/Button";
 import ReviewCard from "@/components/ui/ReviewCard";
 import RecommendedTailors from "@/components/RecommendedTailors";
+import HomeHero from "@/components/home/HomeHero";
+import CategoryShowcase from "@/components/home/CategoryShowcase";
+import PromoBanner from "@/components/home/PromoBanner";
 import { Search, ArrowRight, CheckCircle, Sparkles, Shield, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -21,8 +23,6 @@ const REVIEWS = [
   { name: "Fatima Al-Hassan", rating: 5, comment: "As someone who is particular about fit, I was blown away. They followed my measurements exactly and the result was perfection.", date: "March 2026" },
 ];
 
-const CATEGORIES = ["All Styles", "Native Wear", "Bridal", "Men's Suits", "Corporate", "Casual", "Agbada", "Aso-ebi"];
-
 const STATS = [
   { value: "2,400+", label: "Professional Tailors" },
   { value: "18,000+", label: "Orders Completed" },
@@ -35,48 +35,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative bg-[#FAFAF8] overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#0F766E]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#0F766E]/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 lg:pt-28 lg:pb-32">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-[#CCFBF1] text-[#0F766E] text-sm font-medium px-4 py-2 rounded-full mb-8">
-              <Sparkles className="w-4 h-4" />
-              Africa&apos;s #1 Premium Tailor Marketplace
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#111111] leading-tight mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
-              Wear Clothing{" "}
-              <span className="text-[#0F766E]">Crafted for You.</span>
-            </h1>
-            <p className="text-lg text-[#6B7280] mb-10 max-w-xl mx-auto leading-relaxed">
-              Connect with Africa&apos;s finest tailors. Share your measurements, choose your style, and receive perfectly fitted clothing — delivered to your door.
-            </p>
-
-            {/* Search bar */}
-            <div className="bg-white rounded-2xl shadow-lg border border-[#E5E7EB] p-2 flex flex-col sm:flex-row gap-2 max-w-xl mx-auto mb-6">
-              <div className="flex items-center gap-3 flex-1 px-3">
-                <Search className="w-5 h-5 text-[#9CA3AF] flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Search tailors by name or location..."
-                  className="flex-1 text-sm text-[#111111] placeholder-[#9CA3AF] bg-transparent outline-none py-2"
-                />
-              </div>
-              <Link href="/tailors">
-                <Button variant="primary" size="md" className="w-full sm:w-auto">
-                  Find Tailors
-                </Button>
-              </Link>
-            </div>
-            <p className="text-sm text-[#6B7280]">
-              Trusted by <span className="font-semibold text-[#111111]">18,000+</span> customers across Nigeria
-            </p>
-          </div>
-        </div>
-      </section>
+      <HomeHero />
 
       {/* Stats */}
       <section className="bg-[#111111] py-12">
@@ -92,27 +51,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-16 bg-[#FAFAF8]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-semibold text-[#111111]" style={{ fontFamily: "Poppins, sans-serif" }}>Browse by Style</h2>
-              <p className="text-sm text-[#6B7280] mt-1">Find the perfect tailor for every occasion</p>
-            </div>
-            <Link href="/tailors">
-              <Button variant="outline" size="sm" className="hidden sm:flex items-center gap-1">
-                View all <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
-          <div className="flex gap-3 flex-wrap">
-            {CATEGORIES.map((cat, i) => (
-              <FilterChip key={cat} label={cat} active={i === 0} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <CategoryShowcase />
+
+      <PromoBanner />
 
       {/* Featured Tailors */}
       <section className="py-16 bg-white">

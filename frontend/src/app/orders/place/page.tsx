@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { optimizedImage } from "@/lib/cloudinary";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -174,7 +175,7 @@ export default function PlaceOrderPage() {
                       >
                         {d.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={d.imageUrl} alt={d.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                          <img src={optimizedImage(d.imageUrl, { width: 48, height: 48 })} alt={d.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
                         ) : (
                           <div className="w-12 h-12 rounded-lg bg-[#F3F4F6] flex-shrink-0" />
                         )}

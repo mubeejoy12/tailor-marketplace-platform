@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { optimizedImage } from "@/lib/cloudinary";
 import { MapPin, Star, Clock, ArrowRight, ShieldCheck, Zap } from "lucide-react";
 
 interface TailorCardProps {
@@ -51,7 +52,7 @@ export default function TailorCard({
           style={{ backgroundColor: `${color}15` }}
         >
           {(profileImage || imagePlaceholder) ? (
-            <img src={profileImage || imagePlaceholder} alt={shopName} className="w-full h-full object-cover" />
+            <img src={optimizedImage(profileImage || imagePlaceholder, { width: 400, height: 192 })} alt={shopName} className="w-full h-full object-cover" />
           ) : (
             <div
               className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg"

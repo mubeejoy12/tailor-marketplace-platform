@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { optimizedImage } from '@/lib/cloudinary';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, Star, MapPin, ShieldCheck } from 'lucide-react';
 import { getRecommendations, RecommendationResult } from '@/services/recommendationService';
@@ -65,7 +66,7 @@ function RecommendationCard({ tailor }: { tailor: RecommendationResult }) {
       <div className="h-36 bg-gradient-to-br from-teal-100 to-purple-100 relative">
         {tailor.profileImage ? (
           <img
-            src={tailor.profileImage}
+            src={optimizedImage(tailor.profileImage, { width: 400, height: 144 })}
             alt={tailor.shopName}
             className="w-full h-full object-cover"
           />

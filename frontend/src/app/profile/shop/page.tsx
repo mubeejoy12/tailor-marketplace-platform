@@ -20,10 +20,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AccountSidebar from "@/components/AccountSidebar";
 import ShopDesignsManager from "@/components/ShopDesignsManager";
+import ImageUpload from "@/components/ui/ImageUpload";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import {
-  Scissors, MapPin, Image, Star, AlertCircle,
+  Scissors, MapPin, Star, AlertCircle,
   CheckCircle, Loader2, ShieldCheck, Save,
 } from "lucide-react";
 import {
@@ -289,33 +290,14 @@ export default function ShopProfilePage() {
                     )}
                   </div>
 
-                  {/* Profile image URL */}
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-[#111111]">
-                      Profile / Shop Image URL <span className="text-[#9CA3AF] text-xs font-normal">(optional)</span>
-                    </label>
-                    <div className="relative">
-                      <Image className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
-                      <input
-                        type="url"
-                        value={profileImage}
-                        onChange={(e) => setProfileImage(e.target.value)}
-                        placeholder="https://example.com/my-shop.jpg"
-                        className="w-full rounded-xl border border-[#E5E7EB] bg-white py-3 text-sm text-[#111111] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all"
-                        style={{ paddingLeft: "2.5rem" }}
-                      />
-                    </div>
-                    {profileImage && (
-                      // Preview
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profileImage}
-                        alt="Preview"
-                        className="mt-2 w-20 h-20 rounded-xl object-cover border border-[#E5E7EB]"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
-                    )}
-                  </div>
+                  {/* Profile / shop picture */}
+                  <ImageUpload
+                    label="Shop Picture (optional)"
+                    folder="shops"
+                    value={profileImage}
+                    onChange={setProfileImage}
+                    hint="Your logo or a photo of your shop — shown on your profile and in search"
+                  />
 
                   {/* Error */}
                   {(saveError || error) && (

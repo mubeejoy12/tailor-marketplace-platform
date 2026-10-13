@@ -43,7 +43,7 @@ public class SecurityConfig {
                         "/api/tailors/search", "/api/tailors/search/**",
                         "/api/designs", "/api/designs/**",
                         "/api/reviews/tailor/**", "/api/reviews/order/{orderId}/exists",
-                        "/api/recommendations").permitAll()
+                        "/api/recommendations", "/api/site-content").permitAll()
 
                 // ── Admin ───────────────────────────────────────────────────────
                 .requestMatchers("/api/admin/**", "/api/analytics/admin").hasRole("ADMIN")

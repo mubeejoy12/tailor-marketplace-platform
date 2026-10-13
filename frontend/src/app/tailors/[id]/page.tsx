@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { optimizedImage } from "@/lib/cloudinary";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -134,7 +135,7 @@ export default function TailorDetailPage() {
                 {tailor.profileImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={tailor.profileImage}
+                    src={optimizedImage(tailor.profileImage, { width: 96, height: 96 })}
                     alt={tailor.shopName}
                     className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover flex-shrink-0"
                   />
@@ -223,7 +224,7 @@ export default function TailorDetailPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         key={i}
-                        src={url}
+                        src={optimizedImage(url, { width: 300, height: 300 })}
                         alt={`Portfolio ${i + 1}`}
                         className="aspect-square rounded-xl object-cover w-full"
                       />

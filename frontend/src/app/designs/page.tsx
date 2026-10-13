@@ -10,7 +10,8 @@
  *  - GET /api/designs?keyword&category&minPrice&maxPrice&page&size&sortBy
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DesignCard from "@/components/ui/DesignCard";
@@ -43,9 +44,19 @@ function useDebounce<T>(value: T, delayMs: number): T {
 }
 
 export default function DesignsPage() {
+  // useSearchParams needs a Suspense boundary on statically rendered pages
+  return (
+    <Suspense>
+      <DesignCatalog />
+    </Suspense>
+  );
+}
+
+function DesignCatalog() {
+  const searchParams = useSearchParams();
   // ── Filter state ──────────────────────────────────────────────────────────
   const [search,      setSearch]      = useState("");
-  const [category,    setCategory]    = useState("");
+  const [category,    setCategory]    = useState(searchParams.get("category") ?? "");
   const [minPrice,    setMinPrice]    = useState("");
   const [maxPrice,    setMaxPrice]    = useState("");
   const [sortBy,      setSortBy]      = useState<NonNullable<DesignSearchParams["sortBy"]>>("newest");

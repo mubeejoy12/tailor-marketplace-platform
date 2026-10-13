@@ -237,6 +237,16 @@ export default function AdminPage() {
           <p className="text-sm text-[#6B7280] mt-0.5">Platform management and analytics</p>
         </div>
 
+        {/* Quick links */}
+        <div className="flex flex-wrap gap-3">
+          <a href="/admin/content" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#E5E7EB] text-sm font-medium text-[#111111] hover:border-[#0F766E] hover:text-[#0F766E]">
+            Site Content &amp; Photos →
+          </a>
+          <a href="/admin/verifications" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#E5E7EB] text-sm font-medium text-[#111111] hover:border-[#0F766E] hover:text-[#0F766E]">
+            Verifications →
+          </a>
+        </div>
+
         {/* Metrics grid */}
         {metrics && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

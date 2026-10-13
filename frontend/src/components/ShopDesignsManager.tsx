@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import Modal from "@/components/ui/Modal";
+import ImageUpload from "@/components/ui/ImageUpload";
 import { AlertCircle, Loader2, Pencil, Plus, Shirt, Trash2 } from "lucide-react";
 import {
   getDesignsByTailor,
@@ -19,6 +20,7 @@ import {
   DESIGN_CATEGORIES,
   Design,
 } from "@/services/designService";
+import { optimizedImage } from "@/lib/cloudinary";
 
 interface ShopDesignsManagerProps {
   tailorId: number;
@@ -157,7 +159,7 @@ export default function ShopDesignsManager({ tailorId }: ShopDesignsManagerProps
             <li key={d.id} className="flex items-center gap-3 py-3">
               {d.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={d.imageUrl} alt={d.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                <img src={optimizedImage(d.imageUrl, { width: 48, height: 48 })} alt={d.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
               ) : (
                 <div className="w-12 h-12 rounded-lg bg-[#F3F4F6] flex items-center justify-center flex-shrink-0">
                   <Shirt className="w-5 h-5 text-[#D1D5DB]" />
@@ -239,13 +241,12 @@ export default function ShopDesignsManager({ tailorId }: ShopDesignsManagerProps
             />
           </div>
 
-          <InputField
-            label="Image URL"
-            type="url"
+          <ImageUpload
+            label="Photo"
+            folder="designs"
             value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-            placeholder="https://example.com/design.jpg"
-            hint="Optional — a photo of a finished piece"
+            onChange={(url) => setForm({ ...form, imageUrl: url })}
+            hint="A clear photo of a finished piece sells best"
           />
 
           {formError && (
